@@ -186,24 +186,22 @@ export function PipelinePage() {
               >
                 <div className="flex min-w-0 flex-1 items-center justify-between gap-2">
                   <span
-                    className="min-w-0 shrink truncate font-bold text-[13px] text-white"
+                    className="min-w-0 flex-1 truncate text-left text-[13px]"
                     title={
                       r.company?.trim()
-                        ? `${r.contact_name} — ${r.company.trim()}`
+                        ? `${r.contact_name} (${r.company.trim()})`
                         : r.contact_name
                     }
                   >
-                    {r.contact_name}
-                  </span>
-                  <span
-                    className={`min-w-0 flex-1 truncate text-center text-[11px] ${
-                      r.company?.trim()
-                        ? 'text-flowop-green'
-                        : 'text-transparent'
-                    }`}
-                    aria-hidden={!r.company?.trim()}
-                  >
-                    {r.company?.trim() || '\u00a0'}
+                    <span className="font-bold text-white">
+                      {r.contact_name}
+                    </span>
+                    {r.company?.trim() ? (
+                      <span className="font-normal text-[11px] text-flowop-green">
+                        {' '}
+                        ({r.company.trim()})
+                      </span>
+                    ) : null}
                   </span>
                   <span className="shrink-0 text-[11px] tabular-nums text-slate-500">
                     {formatDateUk(r.date_received ?? '')}
