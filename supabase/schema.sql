@@ -1,4 +1,4 @@
--- FlowOP CRM — run this in the Supabase SQL Editor (one script).
+-- FlowOP CPM — run this in the Supabase SQL Editor (one script).
 -- Creates enquiry pipeline enum, tables, updated_at triggers, and Row Level Security.
 
 CREATE TABLE public.enquiries (

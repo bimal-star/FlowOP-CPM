@@ -9,7 +9,7 @@ export function DashboardSummaryBar() {
   return (
     <div
       className="flex w-full min-w-0 flex-col gap-2 sm:flex-row sm:gap-3"
-      aria-label="CRM summary"
+      aria-label="CPM summary"
     >
       <div className={itemClass}>
         <span className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
