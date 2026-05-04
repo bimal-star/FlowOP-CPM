@@ -59,9 +59,12 @@ export function LoginPage() {
         <div className="flex min-h-[min(50dvh,420px)] flex-1 flex-col items-center justify-center px-6 py-10 lg:min-h-0 lg:px-8 lg:py-12">
           <div className="flex w-full max-w-[320px] flex-col items-center">
             <BrandLogo className="h-20 w-auto max-h-20 max-w-[min(380px,92vw)] shrink-0 object-contain object-center" />
+            <p className="mt-3 text-center text-sm font-medium tracking-wide text-slate-400">
+              Client Pipeline Manager
+            </p>
             <form
               onSubmit={(e) => void handleSubmit(e)}
-              className="mt-10 w-full lg:mt-12"
+              className="mt-8 w-full lg:mt-10"
             >
               <label className="block">
                 <span className={labelClass}>Username</span>
