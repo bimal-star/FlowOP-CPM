@@ -158,7 +158,7 @@ export function PipelinePage() {
             {items.length}
           </span>
         </div>
-        <ul className="flex max-h-[min(70vh,560px)] flex-col gap-2 overflow-y-auto p-2">
+        <ul className="flex max-h-[min(70vh,560px)] flex-col gap-1.5 overflow-y-auto p-2">
           {items.length === 0 ? (
             <li className="rounded-lg py-6 text-center text-xs text-slate-500">
               Empty
@@ -182,17 +182,33 @@ export function PipelinePage() {
                     handleCardClick(r)
                   }
                 }}
-                className="cursor-grab rounded-lg border border-white/10 bg-flowop-navy/80 p-3 text-left transition-colors active:cursor-grabbing hover:border-white/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-flowop-green"
+                className="box-border flex h-10 cursor-grab items-center rounded-lg border border-white/10 bg-flowop-navy/80 px-2.5 text-left transition-colors active:cursor-grabbing hover:border-white/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-flowop-green"
               >
-                <p className="font-bold text-white">{r.contact_name}</p>
-                {r.company?.trim() ? (
-                  <p className="mt-1 text-xs text-flowop-green">
-                    {r.company.trim()}
-                  </p>
-                ) : null}
-                <p className="mt-1 text-[11px] tabular-nums text-slate-500">
-                  {formatDateUk(r.date_received ?? '')}
-                </p>
+                <div className="flex min-w-0 flex-1 items-center justify-between gap-2">
+                  <span
+                    className="min-w-0 shrink truncate font-bold text-[13px] text-white"
+                    title={
+                      r.company?.trim()
+                        ? `${r.contact_name} — ${r.company.trim()}`
+                        : r.contact_name
+                    }
+                  >
+                    {r.contact_name}
+                  </span>
+                  <span
+                    className={`min-w-0 flex-1 truncate text-center text-[11px] ${
+                      r.company?.trim()
+                        ? 'text-flowop-green'
+                        : 'text-transparent'
+                    }`}
+                    aria-hidden={!r.company?.trim()}
+                  >
+                    {r.company?.trim() || '\u00a0'}
+                  </span>
+                  <span className="shrink-0 text-[11px] tabular-nums text-slate-500">
+                    {formatDateUk(r.date_received ?? '')}
+                  </span>
+                </div>
               </li>
             ))
           )}
