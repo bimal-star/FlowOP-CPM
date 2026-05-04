@@ -1,9 +1,8 @@
-import { Navigate, useLocation } from 'react-router-dom'
+import { Navigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { session, loading } = useAuth()
-  const location = useLocation()
 
   if (loading) {
     return (
@@ -14,7 +13,7 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   }
 
   if (!session) {
-    return <Navigate to="/login" replace state={{ from: location }} />
+    return <Navigate to="/login" replace />
   }
 
   return <>{children}</>

@@ -15,10 +15,20 @@ import { DEFAULT_EMAIL_TEMPLATE_SEEDS } from '../data/defaultEmailTemplates'
 import type { EmailTemplate, Enquiry } from '../types/crm'
 
 const fieldLabel = 'text-xs font-medium text-slate-400'
+const sectionHeadingTemplate =
+  'text-[11px] font-semibold uppercase tracking-wider text-slate-500'
+const sectionHeadingPreview =
+  'text-[11px] font-semibold uppercase tracking-wider text-flowop-green/90'
+const templatePanelClass =
+  'flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto rounded-xl border border-white/10 bg-flowop-navy/50 p-3 sm:p-4 lg:min-w-0'
+const previewPanelClass =
+  'flex min-h-0 flex-1 flex-col overflow-y-auto rounded-xl border border-dashed border-flowop-green/35 bg-flowop-navy/25 p-3 sm:p-4 lg:min-w-0'
 const inputClass =
-  'mt-1.5 w-full rounded-lg border border-white/10 bg-flowop-navy px-3 py-2.5 text-sm text-white outline-none transition-shadow focus:ring-2 focus:ring-flowop-green'
+  'mt-1 w-full rounded-lg border border-white/10 bg-flowop-navy px-2.5 py-2 text-sm text-white outline-none transition-shadow focus:ring-2 focus:ring-flowop-green'
 const textareaClass =
-  'mt-1.5 min-h-[220px] w-full resize-y rounded-lg border border-white/10 bg-flowop-navy px-3 py-2.5 text-sm text-white outline-none transition-shadow focus:ring-2 focus:ring-flowop-green'
+  'mt-1 min-h-[140px] w-full max-h-full flex-1 resize-y rounded-lg border border-white/10 bg-flowop-navy px-2.5 py-2 text-sm leading-relaxed text-white outline-none transition-shadow focus:ring-2 focus:ring-flowop-green'
+const previewInsetClass =
+  'rounded-lg border border-dashed border-white/20 bg-black/20 px-2.5 py-2'
 
 type Draft = {
   name: string
@@ -444,15 +454,17 @@ export function TemplatesPage() {
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-4">
-      <header className="shrink-0 space-y-1">
-        <h1 className="text-lg font-semibold tracking-tight text-white">
-          Templates
-        </h1>
-        <p className="text-sm leading-snug text-slate-400">
-          Email templates with placeholders. Save changes to Supabase; copy a
-          populated body after choosing an enquiry.
-        </p>
+    <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden">
+      <header className="shrink-0">
+        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+          <h1 className="text-lg font-semibold tracking-tight text-white">
+            Templates
+          </h1>
+          <p className="min-w-0 text-sm leading-snug text-slate-400">
+            Email templates with placeholders. Save changes to Supabase; copy a
+            populated body after choosing an enquiry.
+          </p>
+        </div>
       </header>
 
       {error ? (
@@ -461,8 +473,8 @@ export function TemplatesPage() {
         </p>
       ) : null}
 
-      <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 lg:grid-cols-12 lg:gap-6">
-        <aside className="flex min-h-0 flex-col rounded-xl border border-white/10 bg-flowop-navy-light/50 lg:col-span-4">
+      <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 overflow-hidden lg:grid-cols-12 lg:gap-6">
+        <aside className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-white/10 bg-flowop-navy-light/50 lg:col-span-4">
           <div className="shrink-0 border-b border-white/10 px-4 py-3">
             <button
               type="button"
@@ -578,7 +590,7 @@ export function TemplatesPage() {
           </div>
         </aside>
 
-        <section className="flex min-h-0 flex-col rounded-xl border border-white/10 bg-flowop-navy-light/50 lg:col-span-8">
+        <section className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-white/10 bg-flowop-navy-light/50 lg:col-span-8">
           {!isNew && !selectedId ? (
             <div className="flex flex-1 flex-col items-center justify-center px-6 py-16 text-center text-sm text-slate-500">
               Select a template or add a new one.
@@ -586,140 +598,177 @@ export function TemplatesPage() {
           ) : (
             <form
               onSubmit={(e) => void handleSave(e)}
-              className="flex min-h-0 flex-1 flex-col"
+              className="flex min-h-0 flex-1 flex-col overflow-hidden"
             >
-              <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-4 sm:px-5">
-                <div className="flex flex-wrap gap-2">
-                  <div className="relative">
+              <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden px-4 py-4 sm:px-5">
+                <div className="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <div className="relative">
+                      <button
+                        type="button"
+                        onClick={() => setPopulateOpen((o) => !o)}
+                        className="rounded-lg border border-white/15 px-3 py-2 text-sm text-slate-200 hover:border-white/25 hover:text-white"
+                      >
+                        Auto-populate
+                      </button>
+                      {populateOpen ? (
+                        <div className="absolute left-0 z-20 mt-1 max-h-56 min-w-[min(100vw-2rem,280px)] overflow-y-auto rounded-lg border border-white/15 bg-flowop-navy py-1 shadow-xl">
+                          {enquiries.length === 0 ? (
+                            <p className="px-3 py-2 text-xs text-slate-500">
+                              No enquiries yet.
+                            </p>
+                          ) : (
+                            enquiries.map((en) => (
+                              <button
+                                key={en.id}
+                                type="button"
+                                onClick={() => {
+                                  setPopulateEnquiryId(en.id)
+                                  setPopulateOpen(false)
+                                }}
+                                className="block w-full px-3 py-2 text-left text-sm text-slate-200 hover:bg-white/10"
+                              >
+                                <span className="font-medium text-white">
+                                  {en.contact_name}
+                                </span>
+                                {en.company?.trim()
+                                  ? ` — ${en.company.trim()}`
+                                  : ''}
+                              </button>
+                            ))
+                          )}
+                        </div>
+                      ) : null}
+                    </div>
                     <button
                       type="button"
-                      onClick={() => setPopulateOpen((o) => !o)}
-                      className="rounded-lg border border-white/15 px-3 py-2 text-sm text-slate-200 hover:border-white/25 hover:text-white"
+                      disabled={!populated?.body.trim()}
+                      onClick={() => void copyBody()}
+                      className="rounded-lg border border-white/15 px-3 py-2 text-sm text-slate-200 hover:border-white/25 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
                     >
-                      Auto-populate
+                      Copy to clipboard
                     </button>
-                    {populateOpen ? (
-                      <div className="absolute left-0 z-20 mt-1 max-h-56 min-w-[min(100vw-2rem,280px)] overflow-y-auto rounded-lg border border-white/15 bg-flowop-navy py-1 shadow-xl">
-                        {enquiries.length === 0 ? (
-                          <p className="px-3 py-2 text-xs text-slate-500">
-                            No enquiries yet.
+                    {!isNew && selectedId ? (
+                      <button
+                        type="button"
+                        disabled={deleting}
+                        onClick={() => void handleDelete()}
+                        className="rounded-lg border border-red-500/40 px-3 py-2 text-sm text-red-200 hover:border-red-400/60 disabled:opacity-50"
+                      >
+                        {deleting ? 'Deleting…' : 'Delete template'}
+                      </button>
+                    ) : null}
+                  </div>
+                  <p className="min-w-0 max-w-none text-[11px] leading-snug text-slate-400 sm:max-w-[min(520px,48%)] sm:text-right">
+                    {populateEnquiry ? (
+                      <>
+                        <span className="font-medium text-flowop-green/95">
+                          Preview
+                        </span>{' '}
+                        for{' '}
+                        <span className="font-medium text-slate-200">
+                          {populateEnquiry.contact_name}
+                        </span>
+                        {populateEnquiry.company?.trim()
+                          ? ` (${populateEnquiry.company.trim()})`
+                          : ''}
+                        . Copy uses the preview column; the template column
+                        keeps placeholders until you save.
+                      </>
+                    ) : (
+                      <span className="text-slate-500">
+                        Choose <strong className="font-medium text-slate-400">Auto-populate</strong>{' '}
+                        to load an enquiry — previews appear in the right-hand
+                        column.
+                      </span>
+                    )}
+                  </p>
+                </div>
+
+                <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden lg:flex-row lg:gap-5">
+                  <div className={templatePanelClass}>
+                    <h2 className={sectionHeadingTemplate}>Template</h2>
+                    <label className="block">
+                      <span className={fieldLabel}>Name</span>
+                      <input
+                        required
+                        value={draft.name}
+                        onChange={(e) =>
+                          setDraft((d) => ({ ...d, name: e.target.value }))
+                        }
+                        className={inputClass}
+                      />
+                    </label>
+                    <label className="block">
+                      <span className={fieldLabel}>Category</span>
+                      <input
+                        value={draft.category}
+                        onChange={(e) =>
+                          setDraft((d) => ({
+                            ...d,
+                            category: e.target.value,
+                          }))
+                        }
+                        className={inputClass}
+                      />
+                    </label>
+                    <label className="block">
+                      <span className={fieldLabel}>Subject</span>
+                      <input
+                        required
+                        value={draft.subject}
+                        onChange={(e) =>
+                          setDraft((d) => ({
+                            ...d,
+                            subject: e.target.value,
+                          }))
+                        }
+                        className={inputClass}
+                      />
+                    </label>
+                    <label className="flex min-h-0 flex-1 flex-col">
+                      <span className={fieldLabel}>Body (placeholders)</span>
+                      <textarea
+                        required
+                        value={draft.body}
+                        onChange={(e) =>
+                          setDraft((d) => ({ ...d, body: e.target.value }))
+                        }
+                        className={textareaClass}
+                      />
+                    </label>
+                  </div>
+
+                  <div className={previewPanelClass}>
+                    <h2 className={sectionHeadingPreview}>Preview</h2>
+                    {!populateEnquiry ? (
+                      <p className="mt-2 flex-1 text-sm leading-relaxed text-slate-500">
+                        Select an enquiry with{' '}
+                        <span className="font-medium text-slate-400">
+                          Auto-populate
+                        </span>{' '}
+                        to show resolved subject and body here (read-only).
+                      </p>
+                    ) : populated ? (
+                      <div className="mt-3 flex min-h-0 flex-1 flex-col gap-3">
+                        <div className={previewInsetClass}>
+                          <p className={fieldLabel}>Subject</p>
+                          <p className="mt-1 text-sm leading-snug text-slate-200">
+                            {populated.subject}
                           </p>
-                        ) : (
-                          enquiries.map((en) => (
-                            <button
-                              key={en.id}
-                              type="button"
-                              onClick={() => {
-                                setPopulateEnquiryId(en.id)
-                                setPopulateOpen(false)
-                              }}
-                              className="block w-full px-3 py-2 text-left text-sm text-slate-200 hover:bg-white/10"
-                            >
-                              <span className="font-medium text-white">
-                                {en.contact_name}
-                              </span>
-                              {en.company?.trim()
-                                ? ` — ${en.company.trim()}`
-                                : ''}
-                            </button>
-                          ))
-                        )}
+                        </div>
+                        <div
+                          className={`flex min-h-0 flex-1 flex-col ${previewInsetClass}`}
+                        >
+                          <p className={fieldLabel}>Body</p>
+                          <pre className="mt-1 min-h-0 flex-1 overflow-auto whitespace-pre-wrap break-words font-sans text-sm leading-relaxed text-slate-200">
+                            {populated.body}
+                          </pre>
+                        </div>
                       </div>
                     ) : null}
                   </div>
-                  <button
-                    type="button"
-                    disabled={!populated?.body.trim()}
-                    onClick={() => void copyBody()}
-                    className="rounded-lg border border-white/15 px-3 py-2 text-sm text-slate-200 hover:border-white/25 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
-                  >
-                    Copy to clipboard
-                  </button>
-                  {!isNew && selectedId ? (
-                    <button
-                      type="button"
-                      disabled={deleting}
-                      onClick={() => void handleDelete()}
-                      className="rounded-lg border border-red-500/40 px-3 py-2 text-sm text-red-200 hover:border-red-400/60 disabled:opacity-50"
-                    >
-                      {deleting ? 'Deleting…' : 'Delete template'}
-                    </button>
-                  ) : null}
                 </div>
-
-                {populateEnquiry ? (
-                  <div className="rounded-lg border border-white/10 bg-flowop-navy/50 px-3 py-2 text-xs text-slate-400">
-                    Preview for{' '}
-                    <span className="font-medium text-slate-200">
-                      {populateEnquiry.contact_name}
-                    </span>
-                    {populateEnquiry.company?.trim()
-                      ? ` (${populateEnquiry.company.trim()})`
-                      : ''}
-                    . Copy uses the preview body; editor above still holds the
-                    template with placeholders.
-                  </div>
-                ) : null}
-
-                <label className="block">
-                  <span className={fieldLabel}>Name</span>
-                  <input
-                    required
-                    value={draft.name}
-                    onChange={(e) =>
-                      setDraft((d) => ({ ...d, name: e.target.value }))
-                    }
-                    className={inputClass}
-                  />
-                </label>
-                <label className="block">
-                  <span className={fieldLabel}>Category</span>
-                  <input
-                    value={draft.category}
-                    onChange={(e) =>
-                      setDraft((d) => ({ ...d, category: e.target.value }))
-                    }
-                    className={inputClass}
-                  />
-                </label>
-                <label className="block">
-                  <span className={fieldLabel}>Subject</span>
-                  <input
-                    required
-                    value={draft.subject}
-                    onChange={(e) =>
-                      setDraft((d) => ({ ...d, subject: e.target.value }))
-                    }
-                    className={inputClass}
-                  />
-                </label>
-                {populated ? (
-                  <div className="rounded-lg border border-dashed border-white/15 bg-flowop-navy/30 px-3 py-2">
-                    <p className={fieldLabel}>Preview subject</p>
-                    <p className="mt-1 text-sm text-slate-200">
-                      {populated.subject}
-                    </p>
-                  </div>
-                ) : null}
-                <label className="block">
-                  <span className={fieldLabel}>Body (placeholders)</span>
-                  <textarea
-                    required
-                    value={draft.body}
-                    onChange={(e) =>
-                      setDraft((d) => ({ ...d, body: e.target.value }))
-                    }
-                    className={textareaClass}
-                  />
-                </label>
-                {populated ? (
-                  <div className="rounded-lg border border-dashed border-white/15 bg-flowop-navy/30 px-3 py-2">
-                    <p className={fieldLabel}>Preview body</p>
-                    <pre className="mt-1 max-h-48 overflow-auto whitespace-pre-wrap break-words font-sans text-sm text-slate-200">
-                      {populated.body}
-                    </pre>
-                  </div>
-                ) : null}
               </div>
               <div className="shrink-0 border-t border-white/10 px-4 py-3 sm:px-5">
                 <button

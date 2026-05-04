@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Navigate, useLocation } from 'react-router-dom'
+import { Navigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { BrandLogo } from '../components/BrandLogo'
 import { LoginTimelineSvg } from '../components/LoginTimelineSvg'
@@ -22,10 +22,6 @@ const FEATURE_CARDS: { title: string; description: string }[] = [
 
 export function LoginPage() {
   const { session, loading, signIn } = useAuth()
-  const location = useLocation()
-  const from =
-    (location.state as { from?: { pathname?: string } })?.from?.pathname ??
-    '/enquiries'
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -33,7 +29,7 @@ export function LoginPage() {
   const [submitting, setSubmitting] = useState(false)
 
   if (!loading && session) {
-    return <Navigate to={from} replace />
+    return <Navigate to="/enquiries" replace />
   }
 
   async function handleSubmit(e: React.FormEvent) {

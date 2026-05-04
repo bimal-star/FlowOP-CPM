@@ -15,7 +15,7 @@ export function Layout() {
   const { signOut, user } = useAuth()
 
   return (
-    <div className="flex min-h-dvh flex-col bg-flowop-navy">
+    <div className="flex h-dvh max-h-dvh min-h-0 flex-col overflow-hidden bg-flowop-navy">
       <header className="shrink-0 border-b border-white/10 bg-flowop-navy-light/80 backdrop-blur-sm">
         <div className="flex w-full flex-col gap-4 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
           <div className="flex min-w-0 items-center gap-4">
@@ -72,7 +72,7 @@ export function Layout() {
 
       <FollowUpAlertBanner />
 
-      <main className="flex min-h-0 w-full flex-1 flex-col px-4 py-4 sm:px-6 sm:py-5 lg:px-8">
+      <main className="flex min-h-0 w-full flex-1 flex-col overflow-x-hidden overflow-y-auto px-4 py-4 sm:px-6 sm:py-5 lg:px-8">
         <Outlet />
       </main>
     </div>
