@@ -16,7 +16,7 @@ export function Layout() {
 
   return (
     <div className="flex h-dvh max-h-dvh min-h-0 flex-col overflow-hidden bg-flowop-navy">
-      <header className="shrink-0 border-b border-white/10 bg-flowop-navy-light/80 backdrop-blur-sm">
+      <header className="relative z-[60] shrink-0 border-b border-white/10 bg-flowop-navy-light/80 backdrop-blur-sm">
         <div className="flex w-full flex-col gap-4 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
           <div className="flex min-w-0 items-center gap-4">
             <BrandLogo className="max-h-16 min-h-16 sm:max-w-[320px]" />

@@ -162,7 +162,7 @@ export function EnquiryDetailModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4"
+      className="fixed inset-0 z-50"
       role="dialog"
       aria-modal="true"
       aria-labelledby="enquiry-detail-title"
@@ -175,7 +175,8 @@ export function EnquiryDetailModal({
         aria-label="Close"
         onClick={close}
       />
-      <div className="relative z-10 flex min-h-0 w-full max-h-[min(94dvh,920px)] max-w-[min(96vw,56rem)] flex-col overflow-hidden rounded-lg border border-white/10 bg-flowop-navy-light shadow-xl">
+      <div className="absolute inset-x-3 bottom-3 top-[6.5rem] flex min-h-0 justify-center sm:inset-x-5 sm:bottom-4 sm:top-28 lg:inset-x-8">
+        <div className="relative z-10 flex min-h-0 w-full max-w-[80rem] flex-col overflow-hidden rounded-lg border border-white/10 bg-flowop-navy-light shadow-xl">
         <div className="shrink-0 border-b border-white/10 px-4 py-2 sm:px-5">
           <h3
             id="enquiry-detail-title"
@@ -442,6 +443,7 @@ export function EnquiryDetailModal({
           </div>
         </div>
         )}
+        </div>
       </div>
     </div>
   )
