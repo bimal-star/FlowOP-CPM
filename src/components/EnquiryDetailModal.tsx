@@ -10,7 +10,7 @@ import { ExpandableFormTextarea } from './ExpandableFormTextarea'
 
 const fieldLabel = 'text-xs font-medium text-slate-400'
 const inputClassModal =
-  'mt-1 w-full rounded-lg border border-white/10 bg-flowop-navy px-2.5 py-2 text-sm text-white outline-none transition-shadow focus:ring-2 focus:ring-flowop-green'
+  'mt-0.5 w-full rounded-lg border border-white/10 bg-flowop-navy px-2.5 py-1.5 text-sm text-white outline-none transition-shadow focus:ring-2 focus:ring-flowop-green'
 
 export function EnquiryDetailModal({
   enquiry,
@@ -175,8 +175,8 @@ export function EnquiryDetailModal({
         aria-label="Close"
         onClick={close}
       />
-      <div className="relative z-10 flex min-h-0 w-full max-w-3xl max-h-[min(88dvh,680px)] flex-col overflow-hidden rounded-lg border border-white/10 bg-flowop-navy-light shadow-xl">
-        <div className="shrink-0 border-b border-white/10 px-4 py-2.5 sm:px-5">
+      <div className="relative z-10 flex min-h-0 w-full max-h-[min(94dvh,920px)] max-w-[min(96vw,56rem)] flex-col overflow-hidden rounded-lg border border-white/10 bg-flowop-navy-light shadow-xl">
+        <div className="shrink-0 border-b border-white/10 px-4 py-2 sm:px-5">
           <h3
             id="enquiry-detail-title"
             className="text-sm font-semibold text-white"
@@ -203,13 +203,13 @@ export function EnquiryDetailModal({
           />
         ) : (
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-          <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3 sm:px-5">
+          <div className="shrink-0 border-b border-white/10 px-4 py-2.5 sm:px-5">
             <form
               id="enquiry-detail-form"
               onSubmit={(e) => void save(e)}
-              className="grid gap-3 sm:grid-cols-2"
+              className="grid grid-cols-2 gap-x-3 gap-y-2 lg:grid-cols-4"
             >
-              <label className="block sm:col-span-2">
+              <label className="col-span-2 block lg:col-span-2">
                 <span className={fieldLabel}>Name</span>
                 <input
                   required
@@ -295,16 +295,7 @@ export function EnquiryDetailModal({
                   className={inputClassModal}
                 />
               </label>
-              <ExpandableFormTextarea
-                label="Query summary"
-                value={draft.query_summary}
-                onChange={(next) =>
-                  setDraft((d) => (d ? { ...d, query_summary: next } : d))
-                }
-                collapsedHeightClass="h-[6.25rem] max-h-[6.25rem]"
-                inputClassName={inputClassModal}
-              />
-              <label className="block sm:col-span-2">
+              <label className="col-span-2 block lg:col-span-1">
                 <span className={fieldLabel}>Next action</span>
                 <input
                   value={draft.next_action}
@@ -317,18 +308,37 @@ export function EnquiryDetailModal({
                 />
               </label>
               <ExpandableFormTextarea
+                label="Query summary"
+                value={draft.query_summary}
+                onChange={(next) =>
+                  setDraft((d) => (d ? { ...d, query_summary: next } : d))
+                }
+                collapsedHeightClass="h-[4.5rem] max-h-[4.5rem]"
+                colSpanClass="col-span-2 lg:col-span-2"
+                inputClassName={inputClassModal}
+              />
+              <ExpandableFormTextarea
                 label="Notes"
                 value={draft.notes}
                 onChange={(next) =>
                   setDraft((d) => (d ? { ...d, notes: next } : d))
                 }
-                collapsedHeightClass="h-[5rem] max-h-[5rem]"
+                collapsedHeightClass="h-[4.5rem] max-h-[4.5rem]"
+                colSpanClass="col-span-2 lg:col-span-2"
                 inputClassName={inputClassModal}
               />
             </form>
 
+            {error ? (
+              <p className="mt-2 text-sm text-red-400" role="alert">
+                {error}
+              </p>
+            ) : null}
+          </div>
+
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden px-4 pb-2 pt-2 sm:px-5">
             <div
-              className="mt-6 flex gap-1 rounded-lg border border-white/10 p-0.5"
+              className="flex shrink-0 gap-1 rounded-lg border border-white/10 p-0.5"
               role="tablist"
               aria-label="Enquiry detail sections"
             >
@@ -360,7 +370,7 @@ export function EnquiryDetailModal({
               </button>
             </div>
 
-            <div className="mt-4" role="tabpanel">
+            <div className="mt-2 min-h-0 flex-1 overflow-y-auto" role="tabpanel">
               {activeTab === 'followups' ? (
                 <EnquiryModalFollowUpsTab
                   key={enquiry.id}
@@ -402,39 +412,33 @@ export function EnquiryDetailModal({
                 </section>
               )}
             </div>
-
-            {error ? (
-              <p className="mt-3 text-sm text-red-400" role="alert">
-                {error}
-              </p>
-            ) : null}
           </div>
-          <div className="flex shrink-0 flex-wrap justify-end gap-2 border-t border-white/10 px-4 py-2.5 sm:px-5">
-            <button
-              type="button"
-              onClick={close}
-              className="rounded-lg border border-white/15 px-3 py-1.5 text-sm text-slate-300 hover:border-white/25 hover:text-white"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              form="enquiry-detail-form"
-              disabled={saving || deleting}
-              className="rounded-lg bg-flowop-green px-3 py-1.5 text-sm font-medium text-white hover:bg-flowop-green-hover disabled:opacity-50"
-            >
-              {saving ? 'Saving…' : 'Save changes'}
-            </button>
-          </div>
-          <div className="shrink-0 border-t border-white/10 px-4 py-2.5 sm:px-5">
+          <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-t border-white/10 px-4 py-2 sm:px-5">
             <button
               type="button"
               disabled={deleting || saving}
               onClick={() => void handleDelete()}
-              className="w-full rounded-lg border border-red-500/40 bg-red-950/35 px-3 py-2 text-sm font-medium text-red-200 transition-colors hover:border-red-400/60 hover:bg-red-950/55 disabled:opacity-50 sm:w-auto"
+              className="rounded-lg border border-red-500/40 bg-red-950/35 px-3 py-1.5 text-sm font-medium text-red-200 transition-colors hover:border-red-400/60 hover:bg-red-950/55 disabled:opacity-50"
             >
               {deleting ? 'Deleting…' : 'Delete enquiry'}
             </button>
+            <div className="flex flex-wrap justify-end gap-2">
+              <button
+                type="button"
+                onClick={close}
+                className="rounded-lg border border-white/15 px-3 py-1.5 text-sm text-slate-300 hover:border-white/25 hover:text-white"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                form="enquiry-detail-form"
+                disabled={saving || deleting}
+                className="rounded-lg bg-flowop-green px-3 py-1.5 text-sm font-medium text-white hover:bg-flowop-green-hover disabled:opacity-50"
+              >
+                {saving ? 'Saving…' : 'Save changes'}
+              </button>
+            </div>
           </div>
         </div>
         )}
