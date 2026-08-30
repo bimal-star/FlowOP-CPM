@@ -514,7 +514,7 @@ export function EnquiryLogPage() {
                       date_received: e.target.value,
                     }))
                   }
-                  className={inputClass}
+                  className={`${inputClass} flowop-date-input`}
                 />
               </label>
               <ExpandableFormTextarea

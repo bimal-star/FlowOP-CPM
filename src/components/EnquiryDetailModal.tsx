@@ -13,7 +13,9 @@ const panelClass =
   'rounded-lg border border-white/10 bg-flowop-navy/40 px-3 py-3'
 const inputClass =
   'w-full rounded-lg border border-white/10 bg-flowop-navy px-3 py-2.5 text-sm text-white outline-none transition-shadow focus:ring-2 focus:ring-flowop-green'
+const selectClass = `${inputClass} flowop-select`
 const inputTextarea = inputClass
+const alignedCompactInputWidth = 'min-w-0 w-[10.5rem]'
 
 function DetailField({
   label,
@@ -272,7 +274,7 @@ export function EnquiryDetailModal({
                       className={inputClass}
                     />
                   </DetailField>
-                  <DetailField label="Source" htmlFor="enquiry-source" inputWidthClass="min-w-0 max-w-[10.5rem]">
+                  <DetailField label="Source" htmlFor="enquiry-source" inputWidthClass={alignedCompactInputWidth}>
                     <input
                       id="enquiry-source"
                       value={draft.source}
@@ -284,7 +286,7 @@ export function EnquiryDetailModal({
                       className={inputClass}
                     />
                   </DetailField>
-                  <DetailField label="Stage" htmlFor="enquiry-stage" inputWidthClass="min-w-0 max-w-[9.5rem]">
+                  <DetailField label="Stage" htmlFor="enquiry-stage" inputWidthClass={alignedCompactInputWidth}>
                     <select
                       id="enquiry-stage"
                       value={stageForApi}
@@ -298,7 +300,7 @@ export function EnquiryDetailModal({
                             : d
                         )
                       }
-                      className={inputClass}
+                      className={selectClass}
                     >
                       {stageOptions.map((s) => (
                         <option key={s.name} value={s.name}>
@@ -307,7 +309,7 @@ export function EnquiryDetailModal({
                       ))}
                     </select>
                   </DetailField>
-                  <DetailField label="Date received" htmlFor="enquiry-date" inputWidthClass="min-w-0 max-w-[10.5rem]">
+                  <DetailField label="Date received" htmlFor="enquiry-date" inputWidthClass={alignedCompactInputWidth}>
                     <input
                       id="enquiry-date"
                       type="date"
@@ -317,7 +319,7 @@ export function EnquiryDetailModal({
                           d ? { ...d, date_received: e.target.value } : d
                         )
                       }
-                      className={inputClass}
+                      className={`${inputClass} flowop-date-input`}
                     />
                   </DetailField>
                 </div>

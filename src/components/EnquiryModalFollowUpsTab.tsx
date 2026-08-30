@@ -31,9 +31,18 @@ import {
 
 const thClass =
   'whitespace-nowrap px-2 pb-1.5 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500'
-const cellInputClass =
-  'w-full min-w-0 rounded-md border border-white/10 bg-flowop-navy px-2 py-1.5 text-sm text-white outline-none transition-shadow focus:ring-2 focus:ring-flowop-green'
+const fieldLabel = 'text-xs font-medium text-slate-400'
+const panelClass =
+  'rounded-lg border border-white/10 bg-flowop-navy/40 px-3 py-3'
+const formInputClass =
+  'w-full rounded-lg border border-white/10 bg-flowop-navy px-3 py-2.5 text-sm text-white outline-none transition-shadow focus:ring-2 focus:ring-flowop-green'
+const formSelectClass = `${formInputClass} flowop-select`
+const cellInputEditClass =
+  'w-full min-w-0 rounded border border-white/10 bg-flowop-navy px-1.5 py-1 text-xs text-white outline-none transition-shadow focus:ring-1 focus:ring-flowop-green'
+const cellSelectEditClass = `${cellInputEditClass} flowop-select-compact`
 const tableClass = 'w-full border-collapse text-left text-sm'
+const addFollowUpRowGrid =
+  'grid grid-cols-[6.25rem_10.5rem_5.5rem_9.5rem] items-center gap-x-2.5'
 
 type EditDraft = {
   action_text: string
@@ -233,9 +242,9 @@ export function EnquiryModalFollowUpsTab({
 
   function startEdit(row: FollowUp) {
     setExpandedViewId(null)
+    setExpandedAttachmentsId(null)
     setEditingId(row.id)
     setEditDraft(draftFromFollowUp(row))
-    setExpandedAttachmentsId(row.id)
     setError(null)
   }
 
@@ -440,82 +449,99 @@ export function EnquiryModalFollowUpsTab({
 
       <form
         onSubmit={(e) => void addFollowUp(e)}
-        className="shrink-0 rounded-lg border border-flowop-green/25 bg-flowop-navy/40 p-2 sm:p-2.5"
+        className="shrink-0"
       >
-        <p className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-flowop-green/90">
-          Add follow-up
-          <HelpHint
-            text="Use the paperclip icon on a follow-up row to attach PDF, Word, Excel, PowerPoint, or images."
-            label="Follow-up attachments help"
-          />
-        </p>
-        <div className="overflow-x-auto">
-          <table className={tableClass}>
-            <thead>
-              <tr>
-                <th className={`${thClass} w-[28%]`}>Action</th>
-                <th className={`${thClass} w-[11%]`}>Due</th>
-                <th className={`${thClass} w-[10%]`}>Priority</th>
-                <th className={`${thClass} w-[24%]`}>Notes</th>
-                <th className={`${thClass} w-[7%] text-right`}>
-                  <span className="sr-only">Add</span>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td className="px-2 py-0.5 align-top">
-                  <input
-                    required
-                    value={formAction}
-                    onChange={(e) => setFormAction(e.target.value)}
-                    placeholder="What to do next"
-                    className={cellInputClass}
-                  />
-                </td>
-                <td className="px-2 py-0.5 align-top">
-                  <input
-                    type="date"
-                    required
-                    value={formDue}
-                    onChange={(e) => setFormDue(e.target.value)}
-                    className={cellInputClass}
-                  />
-                </td>
-                <td className="px-2 py-0.5 align-top">
-                  <select
-                    value={formPriority}
-                    onChange={(e) =>
-                      setFormPriority(e.target.value as FollowUpPriority)
-                    }
-                    className={cellInputClass}
-                  >
-                    <option value="high">High</option>
-                    <option value="medium">Medium</option>
-                    <option value="low">Low</option>
-                  </select>
-                </td>
-                <td className="px-2 py-0.5 align-top">
-                  <input
-                    type="text"
-                    value={formNotes}
-                    onChange={(e) => setFormNotes(e.target.value)}
-                    placeholder="Optional"
-                    className={cellInputClass}
-                  />
-                </td>
-                <td className="px-2 py-0.5 align-top text-right">
-                  <button
-                    type="submit"
-                    disabled={saving || savingEdit}
-                    className="whitespace-nowrap rounded-md bg-flowop-green px-2.5 py-1.5 text-xs font-medium text-white hover:bg-flowop-green-hover disabled:opacity-50"
-                  >
-                    {saving ? '…' : 'Add'}
-                  </button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+        <div className="grid grid-cols-1 gap-2.5 lg:grid-cols-[minmax(0,35rem)_minmax(0,1fr)] lg:items-stretch">
+          <div className={`${panelClass} flex h-full min-h-0 flex-row gap-2`}>
+            <div className="flex w-9 shrink-0 items-center justify-center self-stretch border-r border-white/10 pr-2">
+              <div className="-rotate-90 flex items-center gap-1.5 whitespace-nowrap">
+                <span className="text-[11px] font-semibold uppercase tracking-wide text-flowop-green/90">
+                  Add follow-up
+                </span>
+                <HelpHint
+                  text="Use the paperclip icon on a follow-up row to attach PDF, Word, Excel, PowerPoint, or images."
+                  label="Follow-up attachments help"
+                  placement="top"
+                />
+              </div>
+            </div>
+            <div className="-ml-11 flex min-w-0 flex-1 flex-col gap-2.5">
+            <div className={addFollowUpRowGrid}>
+              <label
+                htmlFor="follow-up-action"
+                className={`${fieldLabel} text-right`}
+              >
+                Action
+              </label>
+              <input
+                id="follow-up-action"
+                required
+                value={formAction}
+                onChange={(e) => setFormAction(e.target.value)}
+                placeholder="What to do next"
+                className={`${formInputClass} col-span-3 min-w-0`}
+              />
+            </div>
+            <div className={addFollowUpRowGrid}>
+              <label
+                htmlFor="follow-up-due"
+                className={`${fieldLabel} text-right`}
+              >
+                Due
+              </label>
+              <input
+                id="follow-up-due"
+                type="date"
+                required
+                value={formDue}
+                onChange={(e) => setFormDue(e.target.value)}
+                className={`${formInputClass} flowop-date-input w-full`}
+              />
+              <label
+                htmlFor="follow-up-priority"
+                className={`${fieldLabel} text-right`}
+              >
+                Priority
+              </label>
+              <select
+                id="follow-up-priority"
+                value={formPriority}
+                onChange={(e) =>
+                  setFormPriority(e.target.value as FollowUpPriority)
+                }
+                className={formSelectClass}
+              >
+                <option value="high">High</option>
+                <option value="medium">Medium</option>
+                <option value="low">Low</option>
+              </select>
+            </div>
+            <div className="flex justify-center">
+              <button
+                type="submit"
+                disabled={saving || savingEdit}
+                className="min-w-[12rem] rounded-lg bg-flowop-green px-4 py-2 text-sm font-medium text-white hover:bg-flowop-green-hover disabled:opacity-50"
+              >
+                {saving ? 'Adding…' : 'Add follow-up'}
+              </button>
+            </div>
+            </div>
+          </div>
+
+          <div className={`${panelClass} flex h-full min-h-0 w-full min-w-0 flex-col`}>
+            <label htmlFor="follow-up-notes" className={fieldLabel}>
+              Notes
+            </label>
+            <textarea
+              id="follow-up-notes"
+              rows={5}
+              value={formNotes}
+              onChange={(e) => setFormNotes(e.target.value)}
+              placeholder="Optional"
+              style={{ resize: 'none' }}
+              className={`mt-1.5 min-h-0 flex-1 resize-none overflow-y-auto ${formInputClass}`}
+            />
+          </div>
         </div>
       </form>
 
@@ -553,7 +579,7 @@ export function EnquiryModalFollowUpsTab({
                         ref={(el) => setRowAnchor(r.id, el)}
                         className={`border-b border-flowop-green/30 bg-flowop-green/5 last:border-0 ${focus.main}`}
                       >
-                        <td className="px-2 py-1.5 align-top">
+                        <td className="px-2 py-1 align-top">
                           <input
                             required
                             value={editDraft.action_text}
@@ -562,10 +588,10 @@ export function EnquiryModalFollowUpsTab({
                                 d ? { ...d, action_text: e.target.value } : d
                               )
                             }
-                            className={cellInputClass}
+                            className={cellInputEditClass}
                           />
                         </td>
-                        <td className="px-2 py-1.5 align-top">
+                        <td className="px-2 py-1 align-top">
                           <input
                             type="date"
                             required
@@ -575,10 +601,10 @@ export function EnquiryModalFollowUpsTab({
                                 d ? { ...d, due: e.target.value } : d
                               )
                             }
-                            className={cellInputClass}
+                            className={`${cellInputEditClass} flowop-date-input-compact`}
                           />
                         </td>
-                        <td className="px-2 py-1.5 align-top">
+                        <td className="px-2 py-1 align-top">
                           <select
                             value={editDraft.priority}
                             onChange={(e) =>
@@ -591,25 +617,25 @@ export function EnquiryModalFollowUpsTab({
                                   : d
                               )
                             }
-                            className={cellInputClass}
+                            className={cellSelectEditClass}
                           >
                             <option value="high">High</option>
                             <option value="medium">Medium</option>
                             <option value="low">Low</option>
                           </select>
                         </td>
-                        <td className="px-2 py-1.5 align-top">
+                        <td className="px-2 py-1 align-top">
                           <span
-                            className={`text-xs ${
+                            className={`text-[11px] ${
                               r.is_done ? 'text-emerald-400/90' : 'text-amber-200/90'
                             }`}
                           >
                             {r.is_done ? 'Done' : 'Open'}
                           </span>
                         </td>
-                        <td className="px-2 py-1.5 align-top">
-                          <input
-                            type="text"
+                        <td className="px-2 py-1 align-top">
+                          <textarea
+                            rows={5}
                             value={editDraft.notes}
                             onChange={(e) =>
                               setEditDraft((d) =>
@@ -617,10 +643,10 @@ export function EnquiryModalFollowUpsTab({
                               )
                             }
                             placeholder="Optional"
-                            className={cellInputClass}
+                            className={`${cellInputEditClass} resize-none`}
                           />
                         </td>
-                        <td className="px-2 py-1.5 align-top text-right">
+                        <td className="px-2 py-1 align-top text-right">
                           <div className="flex flex-wrap justify-end gap-1">
                             <button
                               type="button"
@@ -641,9 +667,6 @@ export function EnquiryModalFollowUpsTab({
                           </div>
                         </td>
                       </tr>
-                      {expandedAttachmentsId === r.id
-                        ? renderAttachmentsRow(r.id, true, 'edit')
-                        : null}
                     </Fragment>
                   )
                 }
