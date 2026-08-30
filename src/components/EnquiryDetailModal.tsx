@@ -7,6 +7,8 @@ import type { Enquiry, EnquiryStage, StageHistoryRow } from '../types/crm'
 import { EnquiryModalFollowUpsTab } from './EnquiryModalFollowUpsTab'
 import { EnquiryStageHistoryTrack } from './EnquiryStageHistoryTrack'
 import { ExpandableFormTextarea } from './ExpandableFormTextarea'
+import { HelpHint } from './HelpHint'
+import { IconCheck, IconTrash, IconX } from './FollowUpActionIconButton'
 
 const fieldLabel = 'text-xs font-medium text-slate-400'
 const panelClass =
@@ -16,6 +18,9 @@ const inputClass =
 const selectClass = `${inputClass} flowop-select`
 const inputTextarea = inputClass
 const alignedCompactInputWidth = 'min-w-0 w-[10.5rem]'
+const modalActionButtonClass =
+  'inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors disabled:opacity-50'
+const modalActionIconClass = 'h-4 w-4 shrink-0'
 
 function DetailField({
   label,
@@ -206,12 +211,49 @@ export function EnquiryDetailModal({
       <div className="absolute inset-x-4 bottom-3 top-[6.5rem] flex min-h-0 sm:inset-x-6 sm:bottom-4 sm:top-28 lg:inset-x-8">
         <div className="relative z-10 flex min-h-0 w-full flex-col overflow-hidden rounded-lg border border-white/10 bg-flowop-navy-light shadow-xl">
         <div className="shrink-0 border-b border-white/10 px-4 py-2.5 sm:px-5">
-          <h3
-            id="enquiry-detail-title"
-            className="text-lg font-semibold tracking-tight text-white"
-          >
-            Enquiry details
-          </h3>
+          <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+            <h3
+              id="enquiry-detail-title"
+              className="text-lg font-semibold tracking-tight text-white"
+            >
+              Enquiry details
+            </h3>
+            {!showDeletedMessage ? (
+              <div className="flex flex-wrap items-center justify-end gap-2">
+                <button
+                  type="button"
+                  disabled={deleting || saving}
+                  onClick={() => void handleDelete()}
+                  className={`${modalActionButtonClass} border border-red-500/40 bg-red-950/35 text-red-200 hover:border-red-400/60 hover:bg-red-950/55`}
+                >
+                  <IconTrash className={modalActionIconClass} />
+                  <span>{deleting ? 'Deleting…' : 'Delete enquiry'}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={close}
+                  className={`${modalActionButtonClass} border border-white/15 text-slate-300 hover:border-white/25 hover:text-white`}
+                >
+                  <IconX className={modalActionIconClass} />
+                  <span>Cancel</span>
+                </button>
+                <button
+                  type="submit"
+                  form="enquiry-detail-form"
+                  disabled={saving || deleting}
+                  className={`${modalActionButtonClass} bg-flowop-green text-white hover:bg-flowop-green-hover`}
+                >
+                  <IconCheck className={modalActionIconClass} />
+                  <span>{saving ? 'Saving…' : 'Save changes'}</span>
+                </button>
+                <HelpHint
+                  text="Delete permanently removes this enquiry and all linked follow-ups. Cancel closes without saving. Save changes updates the enquiry in Supabase."
+                  label="Enquiry actions help"
+                  placement="bottom"
+                />
+              </div>
+            ) : null}
+          </div>
         </div>
         {showDeletedMessage ? (
           <div
@@ -378,33 +420,6 @@ export function EnquiryDetailModal({
               initialEditFollowUpId={editFollowUpId}
               onMutate={() => void refreshStats()}
             />
-          </div>
-          <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-t border-white/10 px-4 py-2 sm:px-5">
-            <button
-              type="button"
-              disabled={deleting || saving}
-              onClick={() => void handleDelete()}
-              className="rounded-lg border border-red-500/40 bg-red-950/35 px-3 py-1.5 text-sm font-medium text-red-200 transition-colors hover:border-red-400/60 hover:bg-red-950/55 disabled:opacity-50"
-            >
-              {deleting ? 'Deleting…' : 'Delete enquiry'}
-            </button>
-            <div className="flex flex-wrap justify-end gap-2">
-              <button
-                type="button"
-                onClick={close}
-                className="rounded-lg border border-white/15 px-3 py-1.5 text-sm text-slate-300 hover:border-white/25 hover:text-white"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                form="enquiry-detail-form"
-                disabled={saving || deleting}
-                className="rounded-lg bg-flowop-green px-3 py-1.5 text-sm font-medium text-white hover:bg-flowop-green-hover disabled:opacity-50"
-              >
-                {saving ? 'Saving…' : 'Save changes'}
-              </button>
-            </div>
           </div>
         </div>
         )}
