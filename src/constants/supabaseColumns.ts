@@ -8,3 +8,6 @@ export const EMAIL_TEMPLATE_COLUMNS =
 
 export const PIPELINE_STAGE_COLUMNS =
   'id, user_id, name, label, colour, sort_order, is_default, created_at' as const
+
+export const FOLLOW_UP_ATTACHMENT_COLUMNS =
+  'id, user_id, enquiry_id, follow_up_id, storage_path, file_name, mime_type, size_bytes, created_at' as const

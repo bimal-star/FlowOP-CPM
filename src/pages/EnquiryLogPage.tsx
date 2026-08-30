@@ -5,8 +5,9 @@ import { formatDateUk } from '../lib/dates'
 import { formatStageHistoryLine } from '../lib/stageHistory'
 import { useCrmStats } from '../hooks/useCrmStats'
 import { useAuth } from '../hooks/useAuth'
-import { DashboardSummaryBar } from '../components/DashboardSummaryBar'
 import { usePipelineStages } from '../contexts/PipelineStagesContext'
+import { DashboardSummaryBar } from '../components/DashboardSummaryBar'
+import { HelpHint } from '../components/HelpHint'
 import { stageBadgeInlineStyle } from '../lib/hexColor'
 import { EnquiryDetailModal } from '../components/EnquiryDetailModal'
 import { ExpandableFormTextarea } from '../components/ExpandableFormTextarea'
@@ -319,12 +320,15 @@ export function EnquiryLogPage() {
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4 lg:gap-5">
       <header className="shrink-0 space-y-1">
-        <h1 className="text-lg font-semibold tracking-tight text-white">
-          Enquiry log
-        </h1>
-        <p className="text-sm leading-snug text-slate-400">
-          Capture leads, update pipeline stage, and keep next actions visible.
-        </p>
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+          <h1 className="text-lg font-semibold tracking-tight text-white">
+            Enquiry log
+          </h1>
+          <HelpHint
+            text="Capture leads, update pipeline stage, and keep next actions visible."
+            label="Enquiry log help"
+          />
+        </div>
       </header>
 
       <DashboardSummaryBar />

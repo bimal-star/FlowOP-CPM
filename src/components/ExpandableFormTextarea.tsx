@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef, useState } from 'react'
 
-const fieldLabel = 'text-xs font-medium text-slate-400'
+const defaultFieldLabel = 'text-xs font-medium text-slate-400'
 
 /** Fixed-height textarea, non-resizable; Show more/less when content overflows. */
 export function ExpandableFormTextarea({
@@ -10,6 +10,8 @@ export function ExpandableFormTextarea({
   collapsedHeightClass,
   inputClassName = '',
   colSpanClass = 'sm:col-span-2',
+  labelClassName = defaultFieldLabel,
+  wrapperClassName = '',
 }: {
   label: string
   value: string
@@ -17,6 +19,8 @@ export function ExpandableFormTextarea({
   collapsedHeightClass: string
   inputClassName?: string
   colSpanClass?: string
+  labelClassName?: string
+  wrapperClassName?: string
 }) {
   const ref = useRef<HTMLTextAreaElement>(null)
   const [expanded, setExpanded] = useState(false)
@@ -35,14 +39,14 @@ export function ExpandableFormTextarea({
   }, [value, expanded])
 
   return (
-    <label className={`block w-full min-w-0 ${colSpanClass}`}>
-      <span className={fieldLabel}>{label}</span>
+    <div className={`block w-full min-w-0 ${colSpanClass} ${wrapperClassName}`}>
+      <span className={labelClassName}>{label}</span>
       <textarea
         ref={ref}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         style={{ resize: 'none' }}
-        className={`${inputClassName} resize-none ${
+        className={`mt-1.5 ${inputClassName} resize-none ${
           expanded
             ? 'min-h-[12rem] max-h-[min(70vh,28rem)] overflow-y-auto'
             : `${collapsedHeightClass} overflow-y-auto`
@@ -57,6 +61,6 @@ export function ExpandableFormTextarea({
           {expanded ? 'Show less' : 'Show more'}
         </button>
       ) : null}
-    </label>
+    </div>
   )
 }

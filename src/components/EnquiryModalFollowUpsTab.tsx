@@ -1,17 +1,46 @@
-import { useCallback, useEffect, useState } from 'react'
+import { Fragment, useCallback, useEffect, useRef, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import {
+  dueIsoToLocalDateInput,
   formatFollowUpDueDateUk,
   localDateInputToDueIso,
 } from '../lib/followUpDates'
-import { compareFollowUpsDisplay } from '../lib/followUpPriority'
+import {
+  compareFollowUpsDisplay,
+  normalizeFollowUpPriority,
+} from '../lib/followUpPriority'
 import type { FollowUp, FollowUpPriority } from '../types/crm'
 import { FollowUpPriorityBadge } from './FollowUpPriorityBadge'
+import { FollowUpAttachmentsPanel } from './FollowUpAttachmentsPanel'
+import { HelpHint } from './HelpHint'
+import {
+  FollowUpActionIconButton,
+  IconArrowPath,
+  IconCheck,
+  IconEye,
+  IconPaperclip,
+  IconPencil,
+  IconTrash,
+  IconX,
+} from './FollowUpActionIconButton'
+import {
+  countAttachmentsByFollowUpIds,
+  deleteAllFollowUpAttachments,
+} from '../lib/followUpAttachments'
 
-const fieldLabel = 'text-xs font-medium text-slate-400'
-const inputClass =
-  'mt-1 w-full rounded-lg border border-white/10 bg-flowop-navy px-2.5 py-2 text-sm text-white outline-none transition-shadow focus:ring-2 focus:ring-flowop-green'
+const thClass =
+  'whitespace-nowrap px-2 pb-1.5 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500'
+const cellInputClass =
+  'w-full min-w-0 rounded-md border border-white/10 bg-flowop-navy px-2 py-1.5 text-sm text-white outline-none transition-shadow focus:ring-2 focus:ring-flowop-green'
+const tableClass = 'w-full border-collapse text-left text-sm'
+
+type EditDraft = {
+  action_text: string
+  due: string
+  priority: FollowUpPriority
+  notes: string
+}
 
 function todayDateInputValue(): string {
   const d = new Date()
@@ -22,22 +51,85 @@ function todayDateInputValue(): string {
   ].join('-')
 }
 
+function draftFromFollowUp(row: FollowUp): EditDraft {
+  return {
+    action_text: row.action_text,
+    due: dueIsoToLocalDateInput(row.due_at),
+    priority: normalizeFollowUpPriority(row.priority),
+    notes: row.notes ?? '',
+  }
+}
+
+function followUpRowTone(isDone: boolean) {
+  if (!isDone) {
+    return {
+      tr: 'border-b border-white/5 last:border-0 hover:bg-white/[0.03]',
+      action: 'block text-sm font-medium text-white',
+      due: 'whitespace-nowrap px-2 py-2 align-top text-xs tabular-nums text-slate-400',
+      status: 'text-xs text-amber-200/90',
+      notes: 'max-w-0 px-2 py-2 align-top text-xs leading-snug text-slate-400',
+      badge: '',
+    }
+  }
+  return {
+    tr: 'border-b border-white/[0.04] bg-black/30 last:border-0',
+    action:
+      'block text-sm font-normal text-slate-500 line-through decoration-slate-600',
+    due: 'whitespace-nowrap px-2 py-2 align-top text-xs tabular-nums text-slate-600',
+    status: 'text-xs text-slate-500',
+    notes: 'max-w-0 px-2 py-2 align-top text-xs leading-snug text-slate-600',
+    badge: 'opacity-40 grayscale',
+  }
+}
+
+function formatDateTimeUk(iso: string): string {
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return '—'
+  return d.toLocaleString('en-GB', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
+
 type Props = {
   enquiryId: string
   onMutate: () => void
+  initialEditFollowUpId?: string | null
 }
 
-export function EnquiryModalFollowUpsTab({ enquiryId, onMutate }: Props) {
+export function EnquiryModalFollowUpsTab({
+  enquiryId,
+  onMutate,
+  initialEditFollowUpId = null,
+}: Props) {
   const { user } = useAuth()
   const [rows, setRows] = useState<FollowUp[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
+  const [savingEdit, setSavingEdit] = useState(false)
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editDraft, setEditDraft] = useState<EditDraft | null>(null)
   const [formAction, setFormAction] = useState('')
   const [formDue, setFormDue] = useState(todayDateInputValue)
   const [formPriority, setFormPriority] =
     useState<FollowUpPriority>('medium')
   const [formNotes, setFormNotes] = useState('')
+  const [attachmentCounts, setAttachmentCounts] = useState<Record<string, number>>(
+    {}
+  )
+  const [expandedAttachmentsId, setExpandedAttachmentsId] = useState<string | null>(
+    null
+  )
+  const [expandedViewId, setExpandedViewId] = useState<string | null>(null)
+  const appliedInitialEditKey = useRef<string | null>(null)
+  const rowAnchorRefs = useRef<Map<string, HTMLTableRowElement>>(new Map())
+
+  const focusedRowId =
+    editingId ?? expandedViewId ?? expandedAttachmentsId
 
   const load = useCallback(async () => {
     if (!user) return
@@ -57,6 +149,12 @@ export function EnquiryModalFollowUpsTab({ enquiryId, onMutate }: Props) {
     setError(null)
     const list = ((data as FollowUp[]) ?? []).slice().sort(compareFollowUpsDisplay)
     setRows(list)
+    try {
+      const counts = await countAttachmentsByFollowUpIds(list.map((r) => r.id))
+      setAttachmentCounts(counts)
+    } catch {
+      setAttachmentCounts({})
+    }
     setLoading(false)
   }, [user, enquiryId])
 
@@ -64,6 +162,82 @@ export function EnquiryModalFollowUpsTab({ enquiryId, onMutate }: Props) {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- refetch follow-ups for this enquiry
     void load()
   }, [load])
+
+  useEffect(() => {
+    appliedInitialEditKey.current = null
+    cancelEdit()
+  }, [enquiryId, initialEditFollowUpId])
+
+  useEffect(() => {
+    if (!focusedRowId) return
+    const row = rowAnchorRefs.current.get(focusedRowId)
+    row?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+  }, [focusedRowId, expandedViewId, expandedAttachmentsId, editingId])
+
+  useEffect(() => {
+    if (!focusedRowId) return
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key !== 'Escape') return
+      if (editingId) {
+        cancelEdit()
+        return
+      }
+      setExpandedViewId(null)
+      setExpandedAttachmentsId(null)
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [focusedRowId, editingId])
+
+  function setRowAnchor(id: string, el: HTMLTableRowElement | null) {
+    if (el) rowAnchorRefs.current.set(id, el)
+    else rowAnchorRefs.current.delete(id)
+  }
+
+  function rowFocusClass(rowId: string) {
+    const isFocused = focusedRowId === rowId
+    const isDimmed = focusedRowId !== null && !isFocused
+    return {
+      isFocused,
+      isDimmed,
+      main: [
+        isFocused
+          ? 'relative z-[1] bg-flowop-green/[0.07] ring-1 ring-inset ring-flowop-green/30'
+          : '',
+        isDimmed ? 'opacity-40 pointer-events-none' : '',
+        'transition-opacity duration-200',
+      ].join(' '),
+      detail: [
+        isFocused ? 'relative z-[1] bg-flowop-green/[0.04]' : '',
+        isDimmed ? 'opacity-40 pointer-events-none' : '',
+        'transition-opacity duration-200',
+      ].join(' '),
+    }
+  }
+
+  useEffect(() => {
+    if (loading || !initialEditFollowUpId) return
+    const key = `${enquiryId}:${initialEditFollowUpId}`
+    if (appliedInitialEditKey.current === key) return
+    const row = rows.find((r) => r.id === initialEditFollowUpId)
+    if (!row) return
+    startEdit(row)
+    appliedInitialEditKey.current = key
+  }, [loading, rows, enquiryId, initialEditFollowUpId])
+
+  function cancelEdit() {
+    setEditingId(null)
+    setEditDraft(null)
+    setExpandedAttachmentsId(null)
+  }
+
+  function startEdit(row: FollowUp) {
+    setExpandedViewId(null)
+    setEditingId(row.id)
+    setEditDraft(draftFromFollowUp(row))
+    setExpandedAttachmentsId(row.id)
+    setError(null)
+  }
 
   async function toggleDone(id: string, next: boolean) {
     setError(null)
@@ -88,11 +262,20 @@ export function EnquiryModalFollowUpsTab({ enquiryId, onMutate }: Props) {
       return
     }
     setError(null)
+    try {
+      await deleteAllFollowUpAttachments(id)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not delete attachments.')
+      return
+    }
     const { error: delErr } = await supabase.from('follow_ups').delete().eq('id', id)
     if (delErr) {
       setError(delErr.message)
       return
     }
+    if (editingId === id) cancelEdit()
+    if (expandedAttachmentsId === id) setExpandedAttachmentsId(null)
+    if (expandedViewId === id) setExpandedViewId(null)
     setRows((prev) => prev.filter((r) => r.id !== id))
     onMutate()
   }
@@ -124,147 +307,460 @@ export function EnquiryModalFollowUpsTab({ enquiryId, onMutate }: Props) {
     onMutate()
   }
 
+  async function saveEdit(id: string) {
+    if (!editDraft || !editDraft.action_text.trim()) return
+    setSavingEdit(true)
+    setError(null)
+    const { error: upErr } = await supabase
+      .from('follow_ups')
+      .update({
+        action_text: editDraft.action_text.trim(),
+        due_at: localDateInputToDueIso(editDraft.due),
+        notes: editDraft.notes.trim() || null,
+        priority: editDraft.priority,
+      })
+      .eq('id', id)
+
+    setSavingEdit(false)
+    if (upErr) {
+      setError(upErr.message)
+      return
+    }
+    cancelEdit()
+    void load()
+    onMutate()
+  }
+
+  function refreshAttachmentCounts() {
+    void countAttachmentsByFollowUpIds(rows.map((r) => r.id))
+      .then(setAttachmentCounts)
+      .catch(() => setAttachmentCounts({}))
+  }
+
+  function toggleAttachmentsPanel(id: string) {
+    setExpandedViewId(null)
+    setExpandedAttachmentsId((prev) => (prev === id ? null : id))
+  }
+
+  function toggleViewPanel(id: string) {
+    setExpandedAttachmentsId(null)
+    setExpandedViewId((prev) => (prev === id ? null : id))
+  }
+
+  function closeAttachmentsPanel() {
+    setExpandedAttachmentsId(null)
+  }
+
+  function renderViewDetailsRow(row: FollowUp) {
+    const fileCount = attachmentCounts[row.id] ?? 0
+    const focus = rowFocusClass(row.id)
+
+    return (
+      <tr
+        key={`${row.id}-view`}
+        className={`border-b border-white/5 last:border-0 ${focus.detail}`}
+      >
+        <td colSpan={6} className="px-2 py-1">
+          <div
+            className={`flex items-start gap-2 rounded border border-white/10 px-2 py-1.5 ${
+              row.is_done ? 'bg-black/25' : 'bg-flowop-navy/40'
+            }`}
+          >
+            <div className="min-w-0 flex-1 text-xs leading-snug">
+              {row.notes?.trim() ? (
+                <p
+                  className={`whitespace-pre-wrap ${
+                    row.is_done ? 'text-slate-500' : 'text-slate-300'
+                  }`}
+                >
+                  <span className="font-medium text-slate-500">Notes: </span>
+                  {row.notes.trim()}
+                </p>
+              ) : (
+                <p className="text-slate-600">No notes</p>
+              )}
+              <p className="mt-1 text-[10px] text-slate-500">
+                Created {formatDateTimeUk(row.created_at)}
+                {' · '}
+                Updated {formatDateTimeUk(row.updated_at)}
+                {fileCount > 0
+                  ? ` · ${fileCount} file${fileCount === 1 ? '' : 's'}`
+                  : ''}
+              </p>
+            </div>
+            <FollowUpActionIconButton
+              label="Close details"
+              onClick={() => setExpandedViewId(null)}
+            >
+              <IconX />
+            </FollowUpActionIconButton>
+          </div>
+        </td>
+      </tr>
+    )
+  }
+
+  function renderAttachmentsRow(
+    followUpId: string,
+    editable: boolean,
+    keySuffix: string
+  ) {
+    const focus = rowFocusClass(followUpId)
+
+    return (
+      <tr
+        key={`${followUpId}-attachments-${keySuffix}`}
+        className={`border-b border-white/5 last:border-0 ${focus.detail}`}
+      >
+        <td colSpan={6} className="overflow-hidden px-2 py-1">
+          <FollowUpAttachmentsPanel
+            enquiryId={enquiryId}
+            followUpId={followUpId}
+            editable={editable}
+            onMutate={refreshAttachmentCounts}
+            onError={(message) => setError(message)}
+            onClose={closeAttachmentsPanel}
+          />
+        </td>
+      </tr>
+    )
+  }
+
   if (loading) {
     return <p className="text-sm text-slate-500">Loading follow-ups…</p>
   }
 
   return (
-    <div className="space-y-4">
+    <div className="flex min-h-0 flex-col gap-3">
       {error ? (
         <p className="text-sm text-red-400" role="alert">
           {error}
         </p>
       ) : null}
 
-      <ul className="space-y-2">
-        {rows.length === 0 ? (
-          <li className="rounded-lg border border-dashed border-white/15 py-6 text-center text-sm text-slate-500">
-            No follow-ups yet.
-          </li>
-        ) : (
-          rows.map((r) => (
-            <li
-              key={r.id}
-              className="rounded-lg border border-white/10 bg-flowop-navy/60 px-3 py-2.5"
-            >
-              <div className="flex flex-wrap items-start justify-between gap-2">
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p
-                      className={`min-w-0 text-sm font-medium text-white ${
-                        r.is_done ? 'line-through opacity-70' : ''
-                      }`}
-                    >
-                      {r.action_text}
-                    </p>
-                    <FollowUpPriorityBadge priority={r.priority} />
-                  </div>
-                  <p className="mt-1 text-[11px] text-slate-400">
-                    Due {formatFollowUpDueDateUk(r.due_at)}
-                    <span className="mx-1.5 text-slate-600">·</span>
-                    <span
-                      className={
-                        r.is_done ? 'text-emerald-400/90' : 'text-amber-200/90'
-                      }
-                    >
-                      {r.is_done ? 'Done' : 'Open'}
-                    </span>
-                  </p>
-                  {r.notes?.trim() ? (
-                    <p className="mt-1.5 text-xs leading-snug text-slate-400">
-                      {r.notes}
-                    </p>
-                  ) : null}
-                </div>
-                <div className="flex shrink-0 flex-wrap items-center gap-1.5">
-                  {!r.is_done ? (
-                    <button
-                      type="button"
-                      onClick={() => void toggleDone(r.id, true)}
-                      className="rounded-md border border-white/15 px-2 py-1 text-[11px] font-medium text-slate-200 hover:border-flowop-green/50 hover:text-white"
-                    >
-                      Mark done
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => void toggleDone(r.id, false)}
-                      className="rounded-md border border-white/10 px-2 py-1 text-[11px] text-slate-400 hover:text-slate-200"
-                    >
-                      Reopen
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => void removeFollowUp(r.id)}
-                    className="rounded-md px-2 py-1 text-[11px] text-red-300 hover:text-red-200 hover:underline"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-            </li>
-          ))
-        )}
-      </ul>
-
       <form
         onSubmit={(e) => void addFollowUp(e)}
-        className="border-t border-white/10 pt-4 space-y-3"
+        className="shrink-0 rounded-lg border border-flowop-green/25 bg-flowop-navy/40 p-2 sm:p-2.5"
       >
-        <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+        <p className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-flowop-green/90">
           Add follow-up
+          <HelpHint
+            text="Use the paperclip icon on a follow-up row to attach PDF, Word, Excel, PowerPoint, or images."
+            label="Follow-up attachments help"
+          />
         </p>
-        <label className="block">
-          <span className={fieldLabel}>Action text</span>
-          <input
-            required
-            value={formAction}
-            onChange={(e) => setFormAction(e.target.value)}
-            className={inputClass}
-          />
-        </label>
-        <label className="block">
-          <span className={fieldLabel}>Due date</span>
-          <input
-            type="date"
-            required
-            value={formDue}
-            onChange={(e) => setFormDue(e.target.value)}
-            className={inputClass}
-          />
-        </label>
-        <label className="block">
-          <span className={fieldLabel}>Priority</span>
-          <select
-            value={formPriority}
-            onChange={(e) =>
-              setFormPriority(e.target.value as FollowUpPriority)
-            }
-            className={inputClass}
-          >
-            <option value="high">High</option>
-            <option value="medium">Medium</option>
-            <option value="low">Low</option>
-          </select>
-        </label>
-        <label className="block">
-          <span className={fieldLabel}>Notes</span>
-          <textarea
-            rows={2}
-            value={formNotes}
-            onChange={(e) => setFormNotes(e.target.value)}
-            className={`${inputClass} resize-none`}
-          />
-        </label>
-        <button
-          type="submit"
-          disabled={saving}
-          className="rounded-lg bg-flowop-green px-3 py-2 text-sm font-medium text-white hover:bg-flowop-green-hover disabled:opacity-50"
-        >
-          {saving ? 'Saving…' : 'Add follow-up'}
-        </button>
+        <div className="overflow-x-auto">
+          <table className={tableClass}>
+            <thead>
+              <tr>
+                <th className={`${thClass} w-[28%]`}>Action</th>
+                <th className={`${thClass} w-[11%]`}>Due</th>
+                <th className={`${thClass} w-[10%]`}>Priority</th>
+                <th className={`${thClass} w-[24%]`}>Notes</th>
+                <th className={`${thClass} w-[7%] text-right`}>
+                  <span className="sr-only">Add</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td className="px-2 py-0.5 align-top">
+                  <input
+                    required
+                    value={formAction}
+                    onChange={(e) => setFormAction(e.target.value)}
+                    placeholder="What to do next"
+                    className={cellInputClass}
+                  />
+                </td>
+                <td className="px-2 py-0.5 align-top">
+                  <input
+                    type="date"
+                    required
+                    value={formDue}
+                    onChange={(e) => setFormDue(e.target.value)}
+                    className={cellInputClass}
+                  />
+                </td>
+                <td className="px-2 py-0.5 align-top">
+                  <select
+                    value={formPriority}
+                    onChange={(e) =>
+                      setFormPriority(e.target.value as FollowUpPriority)
+                    }
+                    className={cellInputClass}
+                  >
+                    <option value="high">High</option>
+                    <option value="medium">Medium</option>
+                    <option value="low">Low</option>
+                  </select>
+                </td>
+                <td className="px-2 py-0.5 align-top">
+                  <input
+                    type="text"
+                    value={formNotes}
+                    onChange={(e) => setFormNotes(e.target.value)}
+                    placeholder="Optional"
+                    className={cellInputClass}
+                  />
+                </td>
+                <td className="px-2 py-0.5 align-top text-right">
+                  <button
+                    type="submit"
+                    disabled={saving || savingEdit}
+                    className="whitespace-nowrap rounded-md bg-flowop-green px-2.5 py-1.5 text-xs font-medium text-white hover:bg-flowop-green-hover disabled:opacity-50"
+                  >
+                    {saving ? '…' : 'Add'}
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </form>
+
+      <div className="min-h-0 flex-1 overflow-x-auto overflow-y-auto rounded-lg border border-white/10">
+        <table className={tableClass}>
+          <thead className="sticky top-0 z-[1] bg-flowop-navy-light/95 backdrop-blur-sm">
+            <tr className="border-b border-white/10">
+              <th className={`${thClass} w-[26%]`}>Action</th>
+              <th className={`${thClass} w-[10%]`}>Due</th>
+              <th className={`${thClass} w-[9%]`}>Priority</th>
+              <th className={`${thClass} w-[8%]`}>Status</th>
+              <th className={`${thClass} w-[22%]`}>Notes</th>
+              <th className={`${thClass} w-[14%] text-right`}>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.length === 0 ? (
+              <tr>
+                <td
+                  colSpan={6}
+                  className="px-3 py-6 text-center text-sm text-slate-500"
+                >
+                  No follow-ups yet.
+                </td>
+              </tr>
+            ) : (
+              rows.map((r) => {
+                const isEditing = editingId === r.id && editDraft !== null
+
+                if (isEditing) {
+                  const focus = rowFocusClass(r.id)
+                  return (
+                    <Fragment key={r.id}>
+                      <tr
+                        ref={(el) => setRowAnchor(r.id, el)}
+                        className={`border-b border-flowop-green/30 bg-flowop-green/5 last:border-0 ${focus.main}`}
+                      >
+                        <td className="px-2 py-1.5 align-top">
+                          <input
+                            required
+                            value={editDraft.action_text}
+                            onChange={(e) =>
+                              setEditDraft((d) =>
+                                d ? { ...d, action_text: e.target.value } : d
+                              )
+                            }
+                            className={cellInputClass}
+                          />
+                        </td>
+                        <td className="px-2 py-1.5 align-top">
+                          <input
+                            type="date"
+                            required
+                            value={editDraft.due}
+                            onChange={(e) =>
+                              setEditDraft((d) =>
+                                d ? { ...d, due: e.target.value } : d
+                              )
+                            }
+                            className={cellInputClass}
+                          />
+                        </td>
+                        <td className="px-2 py-1.5 align-top">
+                          <select
+                            value={editDraft.priority}
+                            onChange={(e) =>
+                              setEditDraft((d) =>
+                                d
+                                  ? {
+                                      ...d,
+                                      priority: e.target.value as FollowUpPriority,
+                                    }
+                                  : d
+                              )
+                            }
+                            className={cellInputClass}
+                          >
+                            <option value="high">High</option>
+                            <option value="medium">Medium</option>
+                            <option value="low">Low</option>
+                          </select>
+                        </td>
+                        <td className="px-2 py-1.5 align-top">
+                          <span
+                            className={`text-xs ${
+                              r.is_done ? 'text-emerald-400/90' : 'text-amber-200/90'
+                            }`}
+                          >
+                            {r.is_done ? 'Done' : 'Open'}
+                          </span>
+                        </td>
+                        <td className="px-2 py-1.5 align-top">
+                          <input
+                            type="text"
+                            value={editDraft.notes}
+                            onChange={(e) =>
+                              setEditDraft((d) =>
+                                d ? { ...d, notes: e.target.value } : d
+                              )
+                            }
+                            placeholder="Optional"
+                            className={cellInputClass}
+                          />
+                        </td>
+                        <td className="px-2 py-1.5 align-top text-right">
+                          <div className="flex flex-wrap justify-end gap-1">
+                            <button
+                              type="button"
+                              disabled={savingEdit}
+                              onClick={() => void saveEdit(r.id)}
+                              className="rounded border border-flowop-green/50 bg-flowop-green/20 px-1.5 py-0.5 text-[10px] font-medium text-white hover:bg-flowop-green/35 disabled:opacity-50"
+                            >
+                              {savingEdit ? '…' : 'Save'}
+                            </button>
+                            <button
+                              type="button"
+                              disabled={savingEdit}
+                              onClick={cancelEdit}
+                              className="rounded border border-white/15 px-1.5 py-0.5 text-[10px] text-slate-300 hover:text-white"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                      {expandedAttachmentsId === r.id
+                        ? renderAttachmentsRow(r.id, true, 'edit')
+                        : null}
+                    </Fragment>
+                  )
+                }
+
+                const fileCount = attachmentCounts[r.id] ?? 0
+                const tone = followUpRowTone(r.is_done)
+                const focus = rowFocusClass(r.id)
+
+                return (
+                  <Fragment key={r.id}>
+                    <tr
+                      ref={(el) => setRowAnchor(r.id, el)}
+                      className={`${tone.tr} ${focus.main}`}
+                    >
+                    <td className="px-2 py-2 align-top">
+                      <span className={tone.action}>
+                        {r.action_text}
+                      </span>
+                    </td>
+                    <td className={tone.due}>
+                      {formatFollowUpDueDateUk(r.due_at)}
+                    </td>
+                    <td className="px-2 py-2 align-top">
+                      <FollowUpPriorityBadge
+                        priority={r.priority}
+                        className={tone.badge}
+                      />
+                    </td>
+                    <td className="px-2 py-2 align-top">
+                      <span className={tone.status}>
+                        {r.is_done ? 'Done' : 'Open'}
+                      </span>
+                    </td>
+                    <td className={tone.notes}>
+                      {r.notes?.trim() ? (
+                        <span className="line-clamp-2" title={r.notes.trim()}>
+                          {r.notes.trim()}
+                        </span>
+                      ) : (
+                        <span className="text-slate-600">—</span>
+                      )}
+                    </td>
+                    <td className="px-2 py-2 align-top text-right">
+                      <div
+                        className={`flex flex-wrap justify-end gap-0.5 ${
+                          r.is_done ? 'opacity-80' : ''
+                        }`}
+                      >
+                        <FollowUpActionIconButton
+                          label={expandedViewId === r.id ? 'Hide details' : 'View details'}
+                          disabled={editingId !== null}
+                          active={expandedViewId === r.id}
+                          onClick={() => toggleViewPanel(r.id)}
+                        >
+                          <IconEye />
+                        </FollowUpActionIconButton>
+                        <FollowUpActionIconButton
+                          label={
+                            expandedAttachmentsId === r.id
+                              ? 'Hide files'
+                              : 'View files'
+                          }
+                          disabled={editingId !== null}
+                          active={expandedAttachmentsId === r.id}
+                          onClick={() => toggleAttachmentsPanel(r.id)}
+                        >
+                          <IconPaperclip />
+                          {fileCount > 0 ? (
+                            <span className="absolute -right-1 -top-1 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-flowop-green px-0.5 text-[9px] font-semibold leading-none text-white">
+                              {fileCount > 9 ? '9+' : fileCount}
+                            </span>
+                          ) : null}
+                        </FollowUpActionIconButton>
+                        <FollowUpActionIconButton
+                          label="Edit follow-up"
+                          disabled={editingId !== null}
+                          onClick={() => startEdit(r)}
+                        >
+                          <IconPencil />
+                        </FollowUpActionIconButton>
+                        {!r.is_done ? (
+                          <FollowUpActionIconButton
+                            label="Mark as done"
+                            variant="success"
+                            onClick={() => void toggleDone(r.id, true)}
+                          >
+                            <IconCheck />
+                          </FollowUpActionIconButton>
+                        ) : (
+                          <FollowUpActionIconButton
+                            label="Reopen follow-up"
+                            onClick={() => void toggleDone(r.id, false)}
+                          >
+                            <IconArrowPath />
+                          </FollowUpActionIconButton>
+                        )}
+                        <FollowUpActionIconButton
+                          label="Delete follow-up"
+                          variant="danger"
+                          onClick={() => void removeFollowUp(r.id)}
+                        >
+                          <IconTrash />
+                        </FollowUpActionIconButton>
+                      </div>
+                    </td>
+                  </tr>
+                    {expandedViewId === r.id ? renderViewDetailsRow(r) : null}
+                    {expandedAttachmentsId === r.id
+                      ? renderAttachmentsRow(r.id, !r.is_done, 'view')
+                      : null}
+                  </Fragment>
+                )
+              })
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   )
 }

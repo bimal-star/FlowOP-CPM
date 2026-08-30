@@ -16,6 +16,8 @@ import {
   type TimelineGroupId,
 } from '../lib/followUpTimeline'
 import { compareFollowUpsDisplay } from '../lib/followUpPriority'
+import { countAttachmentsByFollowUpIds } from '../lib/followUpAttachments'
+import { HelpHint } from '../components/HelpHint'
 import type { Enquiry, FollowUp } from '../types/crm'
 import { FollowUpPriorityBadge } from '../components/FollowUpPriorityBadge'
 
@@ -24,6 +26,9 @@ type Row = FollowUp & {
 }
 
 const VIEW_STORAGE_KEY = 'flowop_crm_followups_view'
+
+const listHeaderClass =
+  'text-[11px] font-semibold uppercase tracking-wide text-slate-500'
 
 type ViewMode = 'list' | 'timeline'
 
@@ -57,6 +62,18 @@ function enquiryDisplayName(r: Row): { nameLine: string; companyLine: string } {
   return { nameLine, companyLine }
 }
 
+function attachmentBadge(count: number) {
+  if (count <= 0) return null
+  return (
+    <span
+      className="ml-2 inline-flex items-center rounded border border-white/10 bg-white/5 px-1.5 py-0.5 text-[10px] font-medium text-slate-400"
+      title="Has file attachments"
+    >
+      {count} file{count === 1 ? '' : 's'}
+    </span>
+  )
+}
+
 export function FollowUpsPage() {
   const { user } = useAuth()
   const { refresh: refreshStats } = useCrmStats()
@@ -66,8 +83,12 @@ export function FollowUpsPage() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [detailEnquiry, setDetailEnquiry] = useState<Enquiry | null>(null)
+  const [editFollowUpId, setEditFollowUpId] = useState<string | null>(null)
   const [detailLoading, setDetailLoading] = useState(false)
   const [viewMode, setViewMode] = useState<ViewMode>(() => readStoredView())
+  const [attachmentCounts, setAttachmentCounts] = useState<Record<string, number>>(
+    {}
+  )
 
   const load = useCallback(async () => {
     if (!user) return
@@ -95,6 +116,14 @@ export function FollowUpsPage() {
     })
     normalized.sort(compareFollowUpsDisplay)
     setRows(normalized)
+    try {
+      const counts = await countAttachmentsByFollowUpIds(
+        normalized.map((r) => r.id)
+      )
+      setAttachmentCounts(counts)
+    } catch {
+      setAttachmentCounts({})
+    }
   }, [user])
 
   useEffect(() => {
@@ -137,7 +166,11 @@ export function FollowUpsPage() {
     return map
   }, [rows])
 
-  async function openEnquiryModal(enquiryId: string) {
+  async function openEnquiryModal(
+    enquiryId: string,
+    options?: { editFollowUpId?: string }
+  ) {
+    setEditFollowUpId(options?.editFollowUpId ?? null)
     setDetailLoading(true)
     const { data, error: fetchError } = await supabase
       .from('enquiries')
@@ -154,6 +187,7 @@ export function FollowUpsPage() {
 
   function closeDetail() {
     setDetailEnquiry(null)
+    setEditFollowUpId(null)
   }
 
   async function markDone(id: string) {
@@ -181,13 +215,16 @@ export function FollowUpsPage() {
   return (
     <div className="w-full min-w-0 space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
           <h1 className="text-xl font-semibold text-white">Follow-ups</h1>
-          <p className="mt-1 text-sm text-slate-400">
-            {viewMode === 'list'
-              ? 'Open follow-ups: overdue first, then by priority (high to low), then by due date.'
-              : 'Open follow-ups on a timeline by due date — click a row to open the enquiry.'}
-          </p>
+          <HelpHint
+            text={
+              viewMode === 'list'
+                ? 'Open follow-ups: overdue first, then priority (high to low), then due date. Click a row to open the enquiry.'
+                : 'Open follow-ups on a timeline by due date. Click a row to open the enquiry.'
+            }
+            label="Follow-ups page help"
+          />
         </div>
         <div
           className="flex shrink-0 items-center gap-0.5 rounded-lg border border-white/10 bg-flowop-navy-light/50 p-0.5"
@@ -225,6 +262,17 @@ export function FollowUpsPage() {
         </div>
       ) : viewMode === 'list' ? (
         <div className="flex w-full min-w-0 flex-col gap-2">
+          <div className="hidden px-4 lg:flex lg:items-center lg:justify-between lg:gap-4">
+            <div className="grid min-w-0 flex-1 grid-cols-4 gap-4">
+              <span className={listHeaderClass}>Due / Priority</span>
+              <span className={listHeaderClass}>Action</span>
+              <span className={listHeaderClass}>Contact</span>
+              <span className={listHeaderClass}>Notes</span>
+            </div>
+            <span className={`${listHeaderClass} shrink-0 text-right`}>
+              Actions
+            </span>
+          </div>
           {rows.map((r) => {
             const bucket = dueDayBucket(r.due_at)
             const { nameLine, companyLine } = enquiryDisplayName(r)
@@ -249,7 +297,10 @@ export function FollowUpsPage() {
                     </div>
                     <FollowUpPriorityBadge priority={r.priority} />
                   </div>
-                  <p className="min-w-0 text-sm leading-snug">{r.action_text}</p>
+                  <p className="min-w-0 text-sm leading-snug">
+                    {r.action_text}
+                    {attachmentBadge(attachmentCounts[r.id] ?? 0)}
+                  </p>
                   <div className="min-w-0 text-sm">
                     <button
                       type="button"
@@ -270,7 +321,19 @@ export function FollowUpsPage() {
                     {r.notes?.trim() ? r.notes : '—'}
                   </p>
                 </div>
-                <div className="flex shrink-0 sm:pt-0">
+                <div className="flex shrink-0 flex-wrap gap-2 sm:pt-0">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      void openEnquiryModal(r.enquiry_id, {
+                        editFollowUpId: r.id,
+                      })
+                    }
+                    disabled={detailLoading}
+                    className="rounded-lg border border-white/15 px-3 py-1.5 text-xs font-medium text-slate-200 hover:border-flowop-green/50 hover:text-white disabled:opacity-50"
+                  >
+                    Edit
+                  </button>
                   <button
                     type="button"
                     onClick={() => void markDone(r.id)}
@@ -327,6 +390,7 @@ export function FollowUpsPage() {
                               </p>
                               <p className="mt-0.5 text-sm leading-snug text-slate-300">
                                 {r.action_text}
+                                {attachmentBadge(attachmentCounts[r.id] ?? 0)}
                               </p>
                               <div className="mt-1.5 flex flex-wrap items-center gap-2">
                                 <FollowUpPriorityBadge priority={r.priority} />
@@ -335,16 +399,31 @@ export function FollowUpsPage() {
                                 </span>
                               </div>
                             </button>
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                void markDone(r.id)
-                              }}
-                              className="shrink-0 self-start rounded border border-white/15 px-2.5 py-1 text-[11px] font-medium text-slate-200 hover:border-flowop-green/50 sm:self-center"
-                            >
-                              Mark as done
-                            </button>
+                            <div className="flex shrink-0 flex-wrap gap-2 self-start sm:self-center">
+                              <button
+                                type="button"
+                                disabled={detailLoading}
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  void openEnquiryModal(r.enquiry_id, {
+                                    editFollowUpId: r.id,
+                                  })
+                                }}
+                                className="rounded border border-white/15 px-2.5 py-1 text-[11px] font-medium text-slate-200 hover:border-flowop-green/50 disabled:opacity-50"
+                              >
+                                Edit
+                              </button>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  void markDone(r.id)
+                                }}
+                                className="rounded border border-white/15 px-2.5 py-1 text-[11px] font-medium text-slate-200 hover:border-flowop-green/50"
+                              >
+                                Mark as done
+                              </button>
+                            </div>
                           </div>
                         </li>
                       )
@@ -359,8 +438,9 @@ export function FollowUpsPage() {
 
       {detailEnquiry ? (
         <EnquiryDetailModal
-          key={detailEnquiry.id}
+          key={`${detailEnquiry.id}-${editFollowUpId ?? ''}`}
           enquiry={detailEnquiry}
+          editFollowUpId={editFollowUpId}
           onClose={closeDetail}
           onSaved={() => {
             void load()

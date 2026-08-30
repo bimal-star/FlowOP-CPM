@@ -5,6 +5,7 @@ import { usePipelineStages } from '../contexts/PipelineStagesContext'
 import { formatDateUk } from '../lib/dates'
 import { useCrmStats } from '../hooks/useCrmStats'
 import { EnquiryDetailModal } from '../components/EnquiryDetailModal'
+import { HelpHint } from '../components/HelpHint'
 import type { Enquiry, EnquiryStage } from '../types/crm'
 
 export function PipelinePage() {
@@ -217,11 +218,12 @@ export function PipelinePage() {
 
   return (
     <div className="w-full min-w-0 space-y-6">
-      <div>
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
         <h1 className="text-xl font-semibold text-white">Pipeline</h1>
-        <p className="mt-1 text-sm text-slate-400">
-          Enquiries grouped by stage. Update stages from the enquiry log or here.
-        </p>
+        <HelpHint
+          text="Enquiries grouped by stage. Update stages from the enquiry log or by dragging cards here."
+          label="Pipeline help"
+        />
       </div>
 
       {error ? (

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import { usePipelineStages } from '../contexts/PipelineStagesContext'
+import { HelpHint } from '../components/HelpHint'
 import type { PipelineStageRow } from '../types/crm'
 
 const inlineInputClass =
@@ -169,13 +170,15 @@ export function SettingsPage() {
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-6">
       <header className="shrink-0 space-y-1">
-        <h1 className="text-lg font-semibold tracking-tight text-white">
-          Settings
-        </h1>
-        <p className="text-sm leading-snug text-slate-400">
-          Customise pipeline stages. Order applies to the kanban board and stage
-          dropdowns.
-        </p>
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+          <h1 className="text-lg font-semibold tracking-tight text-white">
+            Settings
+          </h1>
+          <HelpHint
+            text="Customise pipeline stages. Order applies to the kanban board and stage dropdowns."
+            label="Settings help"
+          />
+        </div>
       </header>
 
       {ctxError || error ? (
@@ -191,13 +194,14 @@ export function SettingsPage() {
         <div className="border-b border-white/10 px-4 py-2.5 sm:px-5">
           <h2
             id="stages-heading"
-            className="text-sm font-semibold tracking-wide text-slate-100"
+            className="flex items-center gap-1.5 text-sm font-semibold tracking-wide text-slate-100"
           >
             Pipeline stages
+            <HelpHint
+              text="Drag rows to reorder. Delete is blocked while enquiries use a stage."
+              label="Pipeline stages help"
+            />
           </h2>
-          <p className="mt-0.5 text-[11px] text-slate-500">
-            Drag rows to reorder. Delete is blocked while enquiries use a stage.
-          </p>
         </div>
 
         <div className="min-h-0 px-4 py-3 sm:px-5">

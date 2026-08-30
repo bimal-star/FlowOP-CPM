@@ -3,25 +3,52 @@ import { supabase } from '../lib/supabase'
 import { useCrmStats } from '../hooks/useCrmStats'
 import { usePipelineStages } from '../contexts/PipelineStagesContext'
 import { enquiryToDraft, type EnquiryDetailDraft } from '../lib/enquiryDetail'
-import { formatStageHistoryLine } from '../lib/stageHistory'
 import type { Enquiry, EnquiryStage, StageHistoryRow } from '../types/crm'
 import { EnquiryModalFollowUpsTab } from './EnquiryModalFollowUpsTab'
+import { EnquiryStageHistoryTrack } from './EnquiryStageHistoryTrack'
 import { ExpandableFormTextarea } from './ExpandableFormTextarea'
 
 const fieldLabel = 'text-xs font-medium text-slate-400'
-const inputClassModal =
-  'mt-0.5 w-full rounded-lg border border-white/10 bg-flowop-navy px-2.5 py-1.5 text-sm text-white outline-none transition-shadow focus:ring-2 focus:ring-flowop-green'
+const panelClass =
+  'rounded-lg border border-white/10 bg-flowop-navy/40 px-3 py-3'
+const inputClass =
+  'w-full rounded-lg border border-white/10 bg-flowop-navy px-3 py-2.5 text-sm text-white outline-none transition-shadow focus:ring-2 focus:ring-flowop-green'
+const inputTextarea = inputClass
+
+function DetailField({
+  label,
+  htmlFor,
+  inputWidthClass,
+  children,
+}: {
+  label: string
+  htmlFor: string
+  inputWidthClass?: string
+  children: React.ReactNode
+}) {
+  return (
+    <div className="grid grid-cols-[6.25rem_minmax(0,1fr)] items-center gap-x-2.5 gap-y-0">
+      <label htmlFor={htmlFor} className={`${fieldLabel} text-right`}>
+        {label}
+      </label>
+      <div className={inputWidthClass ?? 'min-w-0 max-w-[13rem]'}>{children}</div>
+    </div>
+  )
+}
 
 export function EnquiryDetailModal({
   enquiry,
   onClose,
   onSaved,
   onDeleted,
+  editFollowUpId = null,
 }: {
   enquiry: Enquiry
   onClose: () => void
   onSaved: () => void
   onDeleted: () => void
+  /** When set, Follow-ups tab opens with this row in edit mode (e.g. from Follow-ups page). */
+  editFollowUpId?: string | null
 }) {
   const [draft, setDraft] = useState<EnquiryDetailDraft>(() =>
     enquiryToDraft(enquiry)
@@ -37,8 +64,7 @@ export function EnquiryDetailModal({
     null
   )
   const { refresh: refreshStats } = useCrmStats()
-  const { stages, labelFor } = usePipelineStages()
-  const [activeTab, setActiveTab] = useState<'followups' | 'stage'>('followups')
+  const { stages } = usePipelineStages()
 
   const stageOptions = useMemo(
     () => stages.map((s) => ({ name: s.name, label: s.label })),
@@ -175,18 +201,15 @@ export function EnquiryDetailModal({
         aria-label="Close"
         onClick={close}
       />
-      <div className="absolute inset-x-3 bottom-3 top-[6.5rem] flex min-h-0 justify-center sm:inset-x-5 sm:bottom-4 sm:top-28 lg:inset-x-8">
-        <div className="relative z-10 flex min-h-0 w-full max-w-[80rem] flex-col overflow-hidden rounded-lg border border-white/10 bg-flowop-navy-light shadow-xl">
-        <div className="shrink-0 border-b border-white/10 px-4 py-2 sm:px-5">
+      <div className="absolute inset-x-4 bottom-3 top-[6.5rem] flex min-h-0 sm:inset-x-6 sm:bottom-4 sm:top-28 lg:inset-x-8">
+        <div className="relative z-10 flex min-h-0 w-full flex-col overflow-hidden rounded-lg border border-white/10 bg-flowop-navy-light shadow-xl">
+        <div className="shrink-0 border-b border-white/10 px-4 py-2.5 sm:px-5">
           <h3
             id="enquiry-detail-title"
-            className="text-sm font-semibold text-white"
+            className="text-lg font-semibold tracking-tight text-white"
           >
             Enquiry details
           </h3>
-          <p className="mt-0.5 text-[11px] leading-snug text-slate-500">
-            Edit and save to update this record.
-          </p>
         </div>
         {showDeletedMessage ? (
           <div
@@ -204,130 +227,139 @@ export function EnquiryDetailModal({
           />
         ) : (
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-          <div className="shrink-0 border-b border-white/10 px-4 py-2.5 sm:px-5">
+          <div className="shrink-0 border-b border-white/10 px-4 py-3 sm:px-5">
             <form
               id="enquiry-detail-form"
               onSubmit={(e) => void save(e)}
-              className="grid grid-cols-2 gap-x-3 gap-y-2 lg:grid-cols-4"
             >
-              <label className="col-span-2 block lg:col-span-2">
-                <span className={fieldLabel}>Name</span>
-                <input
-                  required
-                  value={draft.contact_name}
-                  onChange={(e) =>
-                    setDraft((d) =>
-                      d ? { ...d, contact_name: e.target.value } : d
-                    )
-                  }
-                  className={inputClassModal}
-                />
-              </label>
-              <label className="block">
-                <span className={fieldLabel}>Company</span>
-                <input
-                  value={draft.company}
-                  onChange={(e) =>
-                    setDraft((d) =>
-                      d ? { ...d, company: e.target.value } : d
-                    )
-                  }
-                  className={inputClassModal}
-                />
-              </label>
-              <label className="block">
-                <span className={fieldLabel}>Email</span>
-                <input
-                  type="email"
-                  value={draft.email}
-                  onChange={(e) =>
-                    setDraft((d) =>
-                      d ? { ...d, email: e.target.value } : d
-                    )
-                  }
-                  className={inputClassModal}
-                />
-              </label>
-              <label className="block">
-                <span className={fieldLabel}>Source</span>
-                <input
-                  value={draft.source}
-                  onChange={(e) =>
-                    setDraft((d) =>
-                      d ? { ...d, source: e.target.value } : d
-                    )
-                  }
-                  className={inputClassModal}
-                />
-              </label>
-              <label className="block">
-                <span className={fieldLabel}>Stage</span>
-                <select
-                  value={stageForApi}
-                  onChange={(e) =>
-                    setDraft((d) =>
-                      d
-                        ? {
-                            ...d,
-                            stage: e.target.value as EnquiryStage,
-                          }
-                        : d
-                    )
-                  }
-                  className={inputClassModal}
-                >
-                  {stageOptions.map((s) => (
-                    <option key={s.name} value={s.name}>
-                      {s.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="block">
-                <span className={fieldLabel}>Date received</span>
-                <input
-                  type="date"
-                  value={draft.date_received.slice(0, 10)}
-                  onChange={(e) =>
-                    setDraft((d) =>
-                      d ? { ...d, date_received: e.target.value } : d
-                    )
-                  }
-                  className={inputClassModal}
-                />
-              </label>
-              <label className="col-span-2 block lg:col-span-1">
-                <span className={fieldLabel}>Next action</span>
-                <input
-                  value={draft.next_action}
-                  onChange={(e) =>
-                    setDraft((d) =>
-                      d ? { ...d, next_action: e.target.value } : d
-                    )
-                  }
-                  className={inputClassModal}
-                />
-              </label>
-              <ExpandableFormTextarea
-                label="Query summary"
-                value={draft.query_summary}
-                onChange={(next) =>
-                  setDraft((d) => (d ? { ...d, query_summary: next } : d))
-                }
-                collapsedHeightClass="h-[4.5rem] max-h-[4.5rem]"
-                colSpanClass="col-span-2 lg:col-span-2"
-                inputClassName={inputClassModal}
-              />
-              <ExpandableFormTextarea
-                label="Notes"
-                value={draft.notes}
-                onChange={(next) =>
-                  setDraft((d) => (d ? { ...d, notes: next } : d))
-                }
-                collapsedHeightClass="h-[4.5rem] max-h-[4.5rem]"
-                colSpanClass="col-span-2 lg:col-span-2"
-                inputClassName={inputClassModal}
-              />
+              <div className="grid grid-cols-1 gap-2.5 lg:grid-cols-[minmax(0,24.75rem)_minmax(0,1fr)] lg:items-stretch">
+                <div className={`${panelClass} space-y-2.5`}>
+                  <DetailField label="Name" htmlFor="enquiry-name" inputWidthClass="min-w-0 max-w-[17.25rem]">
+                    <input
+                      id="enquiry-name"
+                      required
+                      value={draft.contact_name}
+                      onChange={(e) =>
+                        setDraft((d) =>
+                          d ? { ...d, contact_name: e.target.value } : d
+                        )
+                      }
+                      className={inputClass}
+                    />
+                  </DetailField>
+                  <DetailField label="Company" htmlFor="enquiry-company" inputWidthClass="min-w-0 max-w-[18rem]">
+                    <input
+                      id="enquiry-company"
+                      value={draft.company}
+                      onChange={(e) =>
+                        setDraft((d) =>
+                          d ? { ...d, company: e.target.value } : d
+                        )
+                      }
+                      className={inputClass}
+                    />
+                  </DetailField>
+                  <DetailField label="Email" htmlFor="enquiry-email" inputWidthClass="min-w-0 max-w-[20.25rem]">
+                    <input
+                      id="enquiry-email"
+                      type="email"
+                      value={draft.email}
+                      onChange={(e) =>
+                        setDraft((d) =>
+                          d ? { ...d, email: e.target.value } : d
+                        )
+                      }
+                      className={inputClass}
+                    />
+                  </DetailField>
+                  <DetailField label="Source" htmlFor="enquiry-source" inputWidthClass="min-w-0 max-w-[10.5rem]">
+                    <input
+                      id="enquiry-source"
+                      value={draft.source}
+                      onChange={(e) =>
+                        setDraft((d) =>
+                          d ? { ...d, source: e.target.value } : d
+                        )
+                      }
+                      className={inputClass}
+                    />
+                  </DetailField>
+                  <DetailField label="Stage" htmlFor="enquiry-stage" inputWidthClass="min-w-0 max-w-[9.5rem]">
+                    <select
+                      id="enquiry-stage"
+                      value={stageForApi}
+                      onChange={(e) =>
+                        setDraft((d) =>
+                          d
+                            ? {
+                                ...d,
+                                stage: e.target.value as EnquiryStage,
+                              }
+                            : d
+                        )
+                      }
+                      className={inputClass}
+                    >
+                      {stageOptions.map((s) => (
+                        <option key={s.name} value={s.name}>
+                          {s.label}
+                        </option>
+                      ))}
+                    </select>
+                  </DetailField>
+                  <DetailField label="Date received" htmlFor="enquiry-date" inputWidthClass="min-w-0 max-w-[10.5rem]">
+                    <input
+                      id="enquiry-date"
+                      type="date"
+                      value={draft.date_received.slice(0, 10)}
+                      onChange={(e) =>
+                        setDraft((d) =>
+                          d ? { ...d, date_received: e.target.value } : d
+                        )
+                      }
+                      className={inputClass}
+                    />
+                  </DetailField>
+                </div>
+
+                <div className={`${panelClass} min-w-0`}>
+                  <div className="flex min-h-0 flex-col gap-2.5">
+                    <div className="grid min-h-0 grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
+                      <ExpandableFormTextarea
+                        label="Query summary"
+                        value={draft.query_summary}
+                        onChange={(next) =>
+                          setDraft((d) => (d ? { ...d, query_summary: next } : d))
+                        }
+                        collapsedHeightClass="min-h-[10rem] max-h-[10rem] lg:min-h-[11rem] lg:max-h-[11rem]"
+                        colSpanClass="flex min-h-0 flex-col"
+                        wrapperClassName="flex min-h-0 flex-col"
+                        labelClassName={fieldLabel}
+                        inputClassName={inputTextarea}
+                      />
+                      <ExpandableFormTextarea
+                        label="Notes"
+                        value={draft.notes}
+                        onChange={(next) =>
+                          setDraft((d) => (d ? { ...d, notes: next } : d))
+                        }
+                        collapsedHeightClass="min-h-[10rem] max-h-[10rem] lg:min-h-[11rem] lg:max-h-[11rem]"
+                        colSpanClass="flex min-h-0 flex-col"
+                        wrapperClassName="flex min-h-0 flex-col"
+                        labelClassName={fieldLabel}
+                        inputClassName={inputTextarea}
+                      />
+                    </div>
+                    <EnquiryStageHistoryTrack
+                      stages={stages}
+                      currentStage={stageForApi}
+                      stageHistory={stageHistory}
+                      loading={historyLoading}
+                      error={historyError}
+                    />
+                  </div>
+                </div>
+              </div>
             </form>
 
             {error ? (
@@ -338,81 +370,12 @@ export function EnquiryDetailModal({
           </div>
 
           <div className="flex min-h-0 flex-1 flex-col overflow-hidden px-4 pb-2 pt-2 sm:px-5">
-            <div
-              className="flex shrink-0 gap-1 rounded-lg border border-white/10 p-0.5"
-              role="tablist"
-              aria-label="Enquiry detail sections"
-            >
-              <button
-                type="button"
-                role="tab"
-                aria-selected={activeTab === 'followups'}
-                className={`flex-1 rounded-md px-3 py-2 text-xs font-medium transition-colors sm:text-sm ${
-                  activeTab === 'followups'
-                    ? 'bg-flowop-green text-white'
-                    : 'text-slate-400 hover:text-white'
-                }`}
-                onClick={() => setActiveTab('followups')}
-              >
-                Follow-ups
-              </button>
-              <button
-                type="button"
-                role="tab"
-                aria-selected={activeTab === 'stage'}
-                className={`flex-1 rounded-md px-3 py-2 text-xs font-medium transition-colors sm:text-sm ${
-                  activeTab === 'stage'
-                    ? 'bg-flowop-green text-white'
-                    : 'text-slate-400 hover:text-white'
-                }`}
-                onClick={() => setActiveTab('stage')}
-              >
-                Stage history
-              </button>
-            </div>
-
-            <div className="mt-2 min-h-0 flex-1 overflow-y-auto" role="tabpanel">
-              {activeTab === 'followups' ? (
-                <EnquiryModalFollowUpsTab
-                  key={enquiry.id}
-                  enquiryId={enquiry.id}
-                  onMutate={() => void refreshStats()}
-                />
-              ) : (
-                <section aria-labelledby="stage-history-heading">
-                  <h4
-                    id="stage-history-heading"
-                    className="sr-only"
-                  >
-                    Stage history
-                  </h4>
-                  {historyLoading ? (
-                    <p className="text-sm text-slate-500">Loading history…</p>
-                  ) : historyError ? (
-                    <p className="text-sm text-red-400" role="alert">
-                      {historyError}
-                    </p>
-                  ) : stageHistory.length === 0 ? (
-                    <p className="text-sm text-slate-500">
-                      No stage changes recorded yet.
-                    </p>
-                  ) : (
-                    <ol className="list-decimal space-y-2.5 pl-4 text-sm text-slate-300">
-                      {stageHistory.map((row) => (
-                        <li key={row.id} className="pl-1 leading-snug">
-                          {formatStageHistoryLine(
-                            row.from_stage,
-                            row.to_stage,
-                            row.changed_at,
-                            labelFor
-                          )}
-                        </li>
-                      ))}
-                    </ol>
-                  )}
-                </section>
-              )}
-            </div>
+            <EnquiryModalFollowUpsTab
+              key={`${enquiry.id}-${editFollowUpId ?? ''}`}
+              enquiryId={enquiry.id}
+              initialEditFollowUpId={editFollowUpId}
+              onMutate={() => void refreshStats()}
+            />
           </div>
           <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-t border-white/10 px-4 py-2 sm:px-5">
             <button

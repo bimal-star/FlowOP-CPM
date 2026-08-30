@@ -12,6 +12,7 @@ import {
 } from '../lib/emailTemplateTree'
 import { EMAIL_TEMPLATE_COLUMNS } from '../constants/supabaseColumns'
 import { DEFAULT_EMAIL_TEMPLATE_SEEDS } from '../data/defaultEmailTemplates'
+import { HelpHint } from '../components/HelpHint'
 import type { EmailTemplate, Enquiry } from '../types/crm'
 
 const fieldLabel = 'text-xs font-medium text-slate-400'
@@ -456,14 +457,14 @@ export function TemplatesPage() {
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden">
       <header className="shrink-0">
-        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
           <h1 className="text-lg font-semibold tracking-tight text-white">
             Templates
           </h1>
-          <p className="min-w-0 text-sm leading-snug text-slate-400">
-            Email templates with placeholders. Save changes to Supabase; copy a
-            populated body after choosing an enquiry.
-          </p>
+          <HelpHint
+            text="Email templates with placeholders. Save changes to Supabase; copy a populated body after choosing an enquiry."
+            label="Templates help"
+          />
         </div>
       </header>
 
@@ -603,7 +604,7 @@ export function TemplatesPage() {
               <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden px-4 py-4 sm:px-5">
                 <div className="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
                   <div className="flex flex-wrap items-center gap-2">
-                    <div className="relative">
+                    <div className="relative flex items-center gap-1">
                       <button
                         type="button"
                         onClick={() => setPopulateOpen((o) => !o)}
@@ -611,6 +612,15 @@ export function TemplatesPage() {
                       >
                         Auto-populate
                       </button>
+                      <HelpHint
+                        text={
+                          populateEnquiry
+                            ? 'Copy uses the preview column; the template column keeps placeholders until you save.'
+                            : 'Choose an enquiry to load placeholders into the preview column on the right.'
+                        }
+                        label="Auto-populate help"
+                        placement="top"
+                      />
                       {populateOpen ? (
                         <div className="absolute left-0 z-20 mt-1 max-h-56 min-w-[min(100vw-2rem,280px)] overflow-y-auto rounded-lg border border-white/15 bg-flowop-navy py-1 shadow-xl">
                           {enquiries.length === 0 ? (
@@ -659,30 +669,17 @@ export function TemplatesPage() {
                       </button>
                     ) : null}
                   </div>
-                  <p className="min-w-0 max-w-none text-[11px] leading-snug text-slate-400 sm:max-w-[min(520px,48%)] sm:text-right">
-                    {populateEnquiry ? (
-                      <>
-                        <span className="font-medium text-flowop-green/95">
-                          Preview
-                        </span>{' '}
-                        for{' '}
-                        <span className="font-medium text-slate-200">
-                          {populateEnquiry.contact_name}
-                        </span>
-                        {populateEnquiry.company?.trim()
-                          ? ` (${populateEnquiry.company.trim()})`
-                          : ''}
-                        . Copy uses the preview column; the template column
-                        keeps placeholders until you save.
-                      </>
-                    ) : (
-                      <span className="text-slate-500">
-                        Choose <strong className="font-medium text-slate-400">Auto-populate</strong>{' '}
-                        to load an enquiry — previews appear in the right-hand
-                        column.
+                  {populateEnquiry ? (
+                    <p className="text-[11px] text-slate-400">
+                      Preview:{' '}
+                      <span className="font-medium text-slate-200">
+                        {populateEnquiry.contact_name}
                       </span>
-                    )}
-                  </p>
+                      {populateEnquiry.company?.trim()
+                        ? ` (${populateEnquiry.company.trim()})`
+                        : ''}
+                    </p>
+                  ) : null}
                 </div>
 
                 <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden lg:flex-row lg:gap-5">

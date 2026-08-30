@@ -57,3 +57,23 @@ export function localDateInputToDueIso(dateStr: string): string {
   const dt = new Date(y, m - 1, day, 9, 0, 0, 0)
   return dt.toISOString()
 }
+
+/** ISO timestamptz → local date input value (YYYY-MM-DD). */
+export function dueIsoToLocalDateInput(iso: string): string {
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return todayDateInputValue()
+  return [
+    d.getFullYear(),
+    String(d.getMonth() + 1).padStart(2, '0'),
+    String(d.getDate()).padStart(2, '0'),
+  ].join('-')
+}
+
+function todayDateInputValue(): string {
+  const d = new Date()
+  return [
+    d.getFullYear(),
+    String(d.getMonth() + 1).padStart(2, '0'),
+    String(d.getDate()).padStart(2, '0'),
+  ].join('-')
+}

@@ -54,6 +54,19 @@ export interface FollowUpWithEnquiry extends FollowUp {
   enquiry?: Pick<Enquiry, 'id' | 'contact_name' | 'company'> | null
 }
 
+/** Matches Supabase `follow_up_attachments`. */
+export interface FollowUpAttachment {
+  id: string
+  user_id: string
+  enquiry_id: string
+  follow_up_id: string
+  storage_path: string
+  file_name: string
+  mime_type: string
+  size_bytes: number
+  created_at: string
+}
+
 /** Matches Supabase `pipeline_stages` (no `updated_at` column). */
 export interface PipelineStageRow {
   id: string
