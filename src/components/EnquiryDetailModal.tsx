@@ -202,12 +202,13 @@ export function EnquiryDetailModal({
             aria-hidden
           />
         ) : (
-        <form
-          onSubmit={(e) => void save(e)}
-          className="flex min-h-0 flex-1 flex-col overflow-hidden"
-        >
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
           <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3 sm:px-5">
-            <div className="grid gap-3 sm:grid-cols-2">
+            <form
+              id="enquiry-detail-form"
+              onSubmit={(e) => void save(e)}
+              className="grid gap-3 sm:grid-cols-2"
+            >
               <label className="block sm:col-span-2">
                 <span className={fieldLabel}>Name</span>
                 <input
@@ -324,7 +325,7 @@ export function EnquiryDetailModal({
                 collapsedHeightClass="h-[5rem] max-h-[5rem]"
                 inputClassName={inputClassModal}
               />
-            </div>
+            </form>
 
             <div
               className="mt-6 flex gap-1 rounded-lg border border-white/10 p-0.5"
@@ -418,6 +419,7 @@ export function EnquiryDetailModal({
             </button>
             <button
               type="submit"
+              form="enquiry-detail-form"
               disabled={saving || deleting}
               className="rounded-lg bg-flowop-green px-3 py-1.5 text-sm font-medium text-white hover:bg-flowop-green-hover disabled:opacity-50"
             >
@@ -434,7 +436,7 @@ export function EnquiryDetailModal({
               {deleting ? 'Deleting…' : 'Delete enquiry'}
             </button>
           </div>
-        </form>
+        </div>
         )}
       </div>
     </div>

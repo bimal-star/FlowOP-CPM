@@ -239,8 +239,9 @@ export function EnquiryLogPage() {
       .in('enquiry_id', ids)
 
     if (historyError) {
-      setLoadError(historyError.message)
-      return
+      setLoadError(
+        `Enquiries loaded, but stage history could not be loaded: ${historyError.message}`
+      )
     }
 
     const byEnquiry = new Map<string, StageHistoryRow[]>()
