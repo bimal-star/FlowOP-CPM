@@ -1,0 +1,13 @@
+---
+description: Calendly Gmail Apps Script integration conventions
+globs: integrations/calendly-gmail/**
+alwaysApply: false
+---
+
+# Calendly Gmail Apps Script
+
+When editing `integrations/calendly-gmail/Code.gs` (especially `setup()`, triggers, or `TRIGGER_EVERY_HOURS`):
+
+1. **Ask the user to confirm their current trigger interval** before changing time-driven trigger code. They may have set it manually in Apps Script → Triggers (e.g. every 4 hours) and it may differ from the repo.
+2. **Warn before changing `setup()`** — re-running `setup()` deletes and recreates triggers, which can overwrite a manually configured interval.
+3. Default in repo: `TRIGGER_EVERY_HOURS = 4` (every 4 hours).
