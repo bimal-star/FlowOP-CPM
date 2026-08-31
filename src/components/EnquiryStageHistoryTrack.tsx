@@ -66,12 +66,12 @@ export function EnquiryStageHistoryTrack({
 
   return (
     <div
-      className="w-full min-w-0"
+      className="w-full min-w-0 overflow-x-auto pb-1 [-webkit-overflow-scrolling:touch]"
       role="group"
       aria-label="Stage history pipeline track"
     >
       <p className="mb-2 text-xs font-medium text-slate-400">Stage history</p>
-      <ol className="flex w-full list-none items-start p-0">
+      <ol className="flex min-w-[32rem] list-none items-start p-0">
         {stages.map((stage, index) => {
           const visited = index <= currentIndex
           const isCurrent = index === currentIndex
@@ -120,7 +120,7 @@ export function EnquiryStageHistoryTrack({
                 />
               </div>
               <span
-                className={`mt-2 w-full px-1 text-center text-sm leading-snug ${
+                className={`mt-2 w-full px-0.5 text-center text-[11px] leading-snug sm:px-1 sm:text-sm ${
                   isCurrent ? 'font-medium text-white' : 'text-slate-500'
                 }`}
               >

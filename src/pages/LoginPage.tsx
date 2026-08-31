@@ -113,7 +113,7 @@ export function LoginPage() {
               <LoginTimelineSvg />
             </div>
 
-            <div className="grid w-full min-w-0 max-w-4xl shrink-0 grid-cols-3 gap-3 lg:gap-4">
+            <div className="grid w-full min-w-0 max-w-4xl shrink-0 grid-cols-1 gap-3 sm:grid-cols-3 lg:gap-4">
               {FEATURE_CARDS.map((card) => (
                 <div
                   key={card.title}

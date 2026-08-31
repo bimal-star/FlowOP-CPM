@@ -17,7 +17,6 @@ const inputClass =
   'w-full rounded-lg border border-white/10 bg-flowop-navy px-3 py-2.5 text-sm text-white outline-none transition-shadow focus:ring-2 focus:ring-flowop-green'
 const selectClass = `${inputClass} flowop-select`
 const inputTextarea = inputClass
-const alignedCompactInputWidth = 'min-w-0 w-[10.5rem]'
 const modalActionButtonClass =
   'inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors disabled:opacity-50'
 const modalActionIconClass = 'h-4 w-4 shrink-0'
@@ -34,11 +33,13 @@ function DetailField({
   children: React.ReactNode
 }) {
   return (
-    <div className="grid grid-cols-[6.25rem_minmax(0,1fr)] items-center gap-x-2.5 gap-y-0">
-      <label htmlFor={htmlFor} className={`${fieldLabel} text-right`}>
+    <div className="grid grid-cols-1 gap-1 sm:grid-cols-[6.25rem_minmax(0,1fr)] sm:items-center sm:gap-x-2.5 sm:gap-y-0">
+      <label htmlFor={htmlFor} className={`${fieldLabel} sm:text-right`}>
         {label}
       </label>
-      <div className={inputWidthClass ?? 'min-w-0 max-w-[13rem]'}>{children}</div>
+      <div className={inputWidthClass ?? 'min-w-0 max-w-full sm:max-w-[13rem]'}>
+        {children}
+      </div>
     </div>
   )
 }
@@ -208,7 +209,7 @@ export function EnquiryDetailModal({
         aria-label="Close"
         onClick={close}
       />
-      <div className="absolute inset-x-4 bottom-3 top-[6.5rem] flex min-h-0 sm:inset-x-6 sm:bottom-4 sm:top-28 lg:inset-x-8">
+      <div className="absolute inset-x-2 bottom-2 top-[4.75rem] flex min-h-0 sm:inset-x-4 sm:bottom-3 sm:top-24 md:top-28 lg:inset-x-8">
         <div className="relative z-10 flex min-h-0 w-full flex-col overflow-hidden rounded-lg border border-white/10 bg-flowop-navy-light shadow-xl">
         <div className="shrink-0 border-b border-white/10 px-4 py-2.5 sm:px-5">
           <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
@@ -278,7 +279,7 @@ export function EnquiryDetailModal({
             >
               <div className="grid grid-cols-1 gap-2.5 lg:grid-cols-[minmax(0,24.75rem)_minmax(0,1fr)] lg:items-stretch">
                 <div className={`${panelClass} space-y-2.5`}>
-                  <DetailField label="Name" htmlFor="enquiry-name" inputWidthClass="min-w-0 max-w-[17.25rem]">
+                  <DetailField label="Name" htmlFor="enquiry-name" inputWidthClass="min-w-0 max-w-full sm:max-w-[17.25rem]">
                     <input
                       id="enquiry-name"
                       required
@@ -291,7 +292,7 @@ export function EnquiryDetailModal({
                       className={inputClass}
                     />
                   </DetailField>
-                  <DetailField label="Company" htmlFor="enquiry-company" inputWidthClass="min-w-0 max-w-[18rem]">
+                  <DetailField label="Company" htmlFor="enquiry-company" inputWidthClass="min-w-0 max-w-full sm:max-w-[18rem]">
                     <input
                       id="enquiry-company"
                       value={draft.company}
@@ -303,7 +304,7 @@ export function EnquiryDetailModal({
                       className={inputClass}
                     />
                   </DetailField>
-                  <DetailField label="Email" htmlFor="enquiry-email" inputWidthClass="min-w-0 max-w-[20.25rem]">
+                  <DetailField label="Email" htmlFor="enquiry-email" inputWidthClass="min-w-0 max-w-full sm:max-w-[20.25rem]">
                     <input
                       id="enquiry-email"
                       type="email"
@@ -316,7 +317,7 @@ export function EnquiryDetailModal({
                       className={inputClass}
                     />
                   </DetailField>
-                  <DetailField label="Source" htmlFor="enquiry-source" inputWidthClass={alignedCompactInputWidth}>
+                  <DetailField label="Source" htmlFor="enquiry-source" inputWidthClass="min-w-0 max-w-full sm:max-w-[10.5rem]">
                     <input
                       id="enquiry-source"
                       value={draft.source}
@@ -328,7 +329,7 @@ export function EnquiryDetailModal({
                       className={inputClass}
                     />
                   </DetailField>
-                  <DetailField label="Stage" htmlFor="enquiry-stage" inputWidthClass={alignedCompactInputWidth}>
+                  <DetailField label="Stage" htmlFor="enquiry-stage" inputWidthClass="min-w-0 max-w-full sm:max-w-[10.5rem]">
                     <select
                       id="enquiry-stage"
                       value={stageForApi}
@@ -351,7 +352,7 @@ export function EnquiryDetailModal({
                       ))}
                     </select>
                   </DetailField>
-                  <DetailField label="Date received" htmlFor="enquiry-date" inputWidthClass={alignedCompactInputWidth}>
+                  <DetailField label="Date received" htmlFor="enquiry-date" inputWidthClass="min-w-0 max-w-full sm:max-w-[10.5rem]">
                     <input
                       id="enquiry-date"
                       type="date"

@@ -339,10 +339,10 @@ export function EnquiryLogPage() {
         </p>
       ) : null}
 
-      <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 lg:grid-cols-5 lg:gap-x-8 lg:gap-y-4 lg:max-h-[calc(100dvh-11.5rem)]">
+      <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 max-md:pb-2 lg:grid-cols-5 lg:gap-x-8 lg:gap-y-4 lg:max-h-[calc(100dvh-11.5rem)]">
         {/* All enquiries — 40% (2/5); mobile: second (below form) */}
         <section
-          className="order-2 flex min-h-0 flex-col overflow-hidden rounded-xl border border-white/10 bg-flowop-navy-light/50 lg:order-1 lg:col-span-2 lg:h-full lg:max-h-full"
+          className="order-2 flex min-h-0 flex-col overflow-hidden rounded-xl border border-white/10 bg-flowop-navy-light/50 max-md:min-h-[min(50vh,28rem)] lg:order-1 lg:col-span-2 lg:h-full lg:max-h-full"
           aria-labelledby="all-enquiries-heading"
         >
           <div className="shrink-0 border-b border-white/10 px-5 py-3 sm:px-6 sm:py-4">
@@ -414,7 +414,7 @@ export function EnquiryLogPage() {
 
         {/* New enquiry — 60% (3/5); mobile: first (on top) */}
         <section
-          className="order-1 flex min-h-0 flex-col overflow-hidden rounded-xl border border-white/10 bg-flowop-navy-light/50 lg:order-2 lg:col-span-3 lg:h-full lg:max-h-full"
+          className="order-1 flex min-h-0 flex-col overflow-hidden rounded-xl border border-white/10 bg-flowop-navy-light/50 max-md:min-h-[min(55vh,32rem)] lg:order-2 lg:col-span-3 lg:h-full lg:max-h-full"
           aria-labelledby="new-enquiry-heading"
         >
           <div className="shrink-0 border-b border-white/10 px-5 py-3 sm:px-6 sm:py-4">
@@ -440,7 +440,7 @@ export function EnquiryLogPage() {
             <form
               id="new-enquiry-form"
               onSubmit={(e) => void addEnquiry(e)}
-              className="grid max-w-full grid-cols-1 gap-2.5 pb-1 sm:grid-cols-3 sm:pb-2"
+              className="grid max-w-full grid-cols-1 gap-2.5 pb-1 md:grid-cols-2 xl:grid-cols-3 md:pb-2"
             >
               <label className="block min-w-0">
                 <span className={fieldLabel}>Name</span>
@@ -524,7 +524,7 @@ export function EnquiryLogPage() {
                   setForm((f) => ({ ...f, query_summary: next }))
                 }
                 collapsedHeightClass="h-[7.5rem] max-h-[7.5rem]"
-                colSpanClass="sm:col-span-3"
+                colSpanClass="md:col-span-2 xl:col-span-3"
                 inputClassName={inputClass}
               />
               <ExpandableFormTextarea
@@ -532,10 +532,10 @@ export function EnquiryLogPage() {
                 value={form.notes}
                 onChange={(next) => setForm((f) => ({ ...f, notes: next }))}
                 collapsedHeightClass="h-[6.5rem] max-h-[6.5rem]"
-                colSpanClass="sm:col-span-3"
+                colSpanClass="md:col-span-2 xl:col-span-3"
                 inputClassName={inputClass}
               />
-              <label className="block min-w-0 sm:col-span-3">
+              <label className="block min-w-0 md:col-span-2 xl:col-span-3">
                 <span className={fieldLabel}>Next action</span>
                 <input
                   value={form.next_action}

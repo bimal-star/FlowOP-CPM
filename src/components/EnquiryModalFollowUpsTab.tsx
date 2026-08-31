@@ -41,8 +41,10 @@ const cellInputEditClass =
   'w-full min-w-0 rounded border border-white/10 bg-flowop-navy px-1.5 py-1 text-xs text-white outline-none transition-shadow focus:ring-1 focus:ring-flowop-green'
 const cellSelectEditClass = `${cellInputEditClass} flowop-select-compact`
 const tableClass = 'w-full border-collapse text-left text-sm'
-const addFollowUpRowGrid =
-  'grid grid-cols-[6.25rem_10.5rem_5.5rem_9.5rem] items-center gap-x-2.5'
+const addFollowUpFieldGrid =
+  'grid grid-cols-1 gap-2 sm:grid-cols-[6.25rem_minmax(0,1fr)] sm:items-center sm:gap-x-2.5'
+const addFollowUpMetaGrid =
+  'grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-[6.25rem_10.5rem_5.5rem_9.5rem] lg:items-center lg:gap-x-2.5'
 
 type EditDraft = {
   action_text: string
@@ -452,8 +454,8 @@ export function EnquiryModalFollowUpsTab({
         className="shrink-0"
       >
         <div className="grid grid-cols-1 gap-2.5 lg:grid-cols-[minmax(0,35rem)_minmax(0,1fr)] lg:items-stretch">
-          <div className={`${panelClass} flex h-full min-h-0 flex-row gap-2`}>
-            <div className="flex w-9 shrink-0 items-center justify-center self-stretch border-r border-white/10 pr-2">
+          <div className={`${panelClass} flex min-h-0 flex-col gap-3 sm:flex-row`}>
+            <div className="hidden w-9 shrink-0 items-center justify-center self-stretch border-r border-white/10 pr-2 sm:flex">
               <div className="-rotate-90 flex items-center gap-1.5 whitespace-nowrap">
                 <span className="text-[11px] font-semibold uppercase tracking-wide text-flowop-green/90">
                   Add follow-up
@@ -465,11 +467,21 @@ export function EnquiryModalFollowUpsTab({
                 />
               </div>
             </div>
-            <div className="-ml-11 flex min-w-0 flex-1 flex-col gap-2.5">
-            <div className={addFollowUpRowGrid}>
+            <div className="flex min-w-0 flex-1 flex-col gap-2.5 sm:-ml-11">
+            <div className="flex items-center gap-1.5 sm:hidden">
+              <span className="text-[11px] font-semibold uppercase tracking-wide text-flowop-green/90">
+                Add follow-up
+              </span>
+              <HelpHint
+                text="Use the paperclip icon on a follow-up row to attach PDF, Word, Excel, PowerPoint, or images."
+                label="Follow-up attachments help"
+                placement="top"
+              />
+            </div>
+            <div className={addFollowUpFieldGrid}>
               <label
                 htmlFor="follow-up-action"
-                className={`${fieldLabel} text-right`}
+                className={`${fieldLabel} sm:text-right`}
               >
                 Action
               </label>
@@ -479,13 +491,13 @@ export function EnquiryModalFollowUpsTab({
                 value={formAction}
                 onChange={(e) => setFormAction(e.target.value)}
                 placeholder="What to do next"
-                className={`${formInputClass} col-span-3 min-w-0`}
+                className={`${formInputClass} min-w-0`}
               />
             </div>
-            <div className={addFollowUpRowGrid}>
+            <div className={addFollowUpMetaGrid}>
               <label
                 htmlFor="follow-up-due"
-                className={`${fieldLabel} text-right`}
+                className={`${fieldLabel} sm:text-right lg:col-start-1`}
               >
                 Due
               </label>
@@ -499,7 +511,7 @@ export function EnquiryModalFollowUpsTab({
               />
               <label
                 htmlFor="follow-up-priority"
-                className={`${fieldLabel} text-right`}
+                className={`${fieldLabel} sm:text-right lg:col-start-3`}
               >
                 Priority
               </label>
@@ -545,8 +557,8 @@ export function EnquiryModalFollowUpsTab({
         </div>
       </form>
 
-      <div className="min-h-0 flex-1 overflow-x-auto overflow-y-auto rounded-lg border border-white/10">
-        <table className={tableClass}>
+      <div className="min-h-0 flex-1 overflow-x-auto overflow-y-auto rounded-lg border border-white/10 [-webkit-overflow-scrolling:touch]">
+        <table className={`${tableClass} min-w-[40rem]`}>
           <thead className="sticky top-0 z-[1] bg-flowop-navy-light/95 backdrop-blur-sm">
             <tr className="border-b border-white/10">
               <th className={`${thClass} w-[26%]`}>Action</th>

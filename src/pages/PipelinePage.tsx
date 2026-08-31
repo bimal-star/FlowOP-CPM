@@ -124,7 +124,7 @@ export function PipelinePage() {
     return (
       <div
         key={col.name}
-        className={`flex min-h-0 min-w-[min(100%,200px)] flex-1 shrink-0 flex-col rounded-xl border border-white/10 bg-flowop-navy-light/30 ${
+        className={`flex min-h-0 min-w-[min(100%,17.5rem)] flex-1 shrink-0 snap-start flex-col rounded-xl border border-white/10 bg-flowop-navy-light/30 sm:min-w-[200px] ${
           isOver
             ? 'ring-2 ring-flowop-green/40 ring-offset-2 ring-offset-flowop-navy'
             : ''
@@ -232,7 +232,7 @@ export function PipelinePage() {
         </p>
       ) : null}
 
-      <div className="flex w-full min-w-0 gap-4 overflow-x-auto pb-2">
+      <div className="flex w-full min-w-0 snap-x snap-mandatory gap-3 overflow-x-auto pb-2 [-webkit-overflow-scrolling:touch] md:gap-4">
         {stages.map((col) =>
           renderColumn(col, byStage.get(col.name) ?? [])
         )}

@@ -16,6 +16,7 @@ body {
   background-color: var(--color-flowop-navy);
   color: #e8eaef;
   -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
 }
 
 #root {
